@@ -15,7 +15,7 @@ const Hero: React.FC = () => {
           <div className="flex-1 text-center lg:text-left">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brand-50 text-brand-700 border border-brand-100 text-xs font-semibold tracking-wide uppercase mb-6">
               <span className="w-2 h-2 rounded-full bg-brand-500 animate-pulse"></span>
-              Formwork Ecosystem Platform
+              Ecosystem Platform
             </div>
             
             <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-slate-900 tracking-tight leading-[1.1] mb-6">
@@ -67,7 +67,7 @@ const Hero: React.FC = () => {
                    <div className="w-3 h-3 rounded-full bg-red-400"></div>
                    <div className="w-3 h-3 rounded-full bg-yellow-400"></div>
                    <div className="w-3 h-3 rounded-full bg-green-400"></div>
-                   <div className="ml-auto px-3 py-1 bg-slate-100 rounded-md text-xs font-medium text-slate-500">FormX Dashboard</div>
+                   <div className="ml-auto px-3 py-1 bg-slate-100 rounded-md text-xs font-medium text-slate-500">[X] Dashboard</div>
                 </div>
                 
                 {/* Mock Grid */}
