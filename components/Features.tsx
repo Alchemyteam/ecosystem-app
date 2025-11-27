@@ -11,7 +11,7 @@ const Features: React.FC = () => {
             An Integrated Ecosystem Platform
           </h3>
           <p className="text-lg text-slate-600">
-            FormX delivers a comprehensive suite of modules designed to digitize the formwork value chain, from compliance to demand generation.
+            [X] delivers a comprehensive suite of modules designed to digitize the formwork value chain, from compliance to demand generation.
           </p>
         </div>
 

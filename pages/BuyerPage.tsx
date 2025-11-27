@@ -24,6 +24,14 @@ const CATEGORY_OPTIONS = [
   { label: 'Accessories', value: 'accessories' },
 ];
 
+interface OrderItem {
+  productId: string;
+  name: string;
+  quantity: number;
+  price?: number;
+  currency?: string;
+}
+
 const BuyerPage: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
@@ -36,7 +44,14 @@ const BuyerPage: React.FC = () => {
   const [isFeaturedLoading, setIsFeaturedLoading] = useState(true);
   const [notification, setNotification] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
   const [isSearchModalOpen, setIsSearchModalOpen] = useState(false);
+  const [isOrdersModalOpen, setIsOrdersModalOpen] = useState(false);
+  const [orderItems, setOrderItems] = useState<OrderItem[]>([]);
   const searchInputRef = useRef<HTMLInputElement | null>(null);
+
+  const totalOrderCount = useMemo(
+    () => orderItems.reduce((sum, item) => sum + item.quantity, 0),
+    [orderItems]
+  );
 
   const priceRangeSummary = useMemo(() => {
     if (!minPrice && !maxPrice) return 'Any price';
@@ -96,7 +111,28 @@ const BuyerPage: React.FC = () => {
   const handleAddToCart = async (productId: string) => {
     try {
       await buyerApi.addToCart({ productId, quantity: 1 });
-      setNotification({ type: 'success', message: 'Product added to cart' });
+      setOrderItems((prev) => {
+        const existing = prev.find((item) => item.productId === productId);
+        if (existing) {
+          return prev.map((item) =>
+            item.productId === productId ? { ...item, quantity: item.quantity + 1 } : item
+          );
+        }
+        const product =
+          searchResults.find((p) => p.id === productId) || featuredProducts.find((p) => p.id === productId);
+        if (!product) return prev;
+        return [
+          ...prev,
+          {
+            productId: product.id,
+            name: product.name,
+            quantity: 1,
+            price: product.price,
+            currency: product.currency,
+          },
+        ];
+      });
+      setNotification({ type: 'success', message: 'Product added to My Orders' });
     } catch (error) {
       const message = (error as { message?: string })?.message || 'Failed to add to cart.';
       setNotification({ type: 'error', message });
@@ -365,6 +401,92 @@ const BuyerPage: React.FC = () => {
             </div>
           )}
 
+          {/* Orders Modal */}
+          {isOrdersModalOpen && (
+            <div className="fixed inset-0 z-50">
+              <div
+                className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm"
+                onClick={() => setIsOrdersModalOpen(false)}
+              />
+              <div className="relative z-10 flex min-h-screen items-center justify-center px-4 py-10">
+                <div className="w-full max-w-3xl bg-white rounded-3xl shadow-2xl border border-slate-100 flex flex-col max-h-[85vh] overflow-hidden">
+                  <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100">
+                    <div>
+                      <h2 className="text-2xl font-semibold text-slate-900">My Orders</h2>
+                      <p className="text-sm text-slate-500">Recently added items</p>
+                    </div>
+                    <button
+                      onClick={() => setIsOrdersModalOpen(false)}
+                      className="w-10 h-10 rounded-xl border border-slate-200 text-slate-500 hover:text-slate-900 hover:border-slate-300 flex items-center justify-center transition-colors"
+                    >
+                      <X size={18} />
+                    </button>
+                  </div>
+                  <div className="flex-1 overflow-y-auto px-6 py-6 space-y-4">
+                    {orderItems.length === 0 ? (
+                      <div className="text-center text-slate-500 py-10 border border-dashed border-slate-200 rounded-2xl">
+                        No orders yet. Add products to see them here.
+                      </div>
+                    ) : (
+                      <>
+                        <div className="space-y-4">
+                          {orderItems.map((item) => (
+                            <div
+                              key={item.productId}
+                              className="border border-slate-200 rounded-2xl p-4 flex items-center justify-between"
+                            >
+                              <div>
+                                <p className="text-sm text-slate-500">#{item.productId.slice(-6).toUpperCase()}</p>
+                                <h3 className="text-lg font-semibold text-slate-900">{item.name}</h3>
+                                <p className="text-sm text-slate-500">
+                                  Quantity: {item.quantity}
+                                </p>
+                              </div>
+                              <div className="text-right">
+                                <p className="text-lg font-bold text-slate-900">
+                                  {item.price != null
+                                    ? `${item.currency || 'USD'} ${(item.price * item.quantity).toFixed(2)}`
+                                    : 'Contact for price'}
+                                </p>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                        <div className="flex items-center justify-between border-t border-slate-100 pt-4">
+                          <div className="text-sm text-slate-500">Items: {orderItems.length}</div>
+                          <div className="text-right">
+                            <p className="text-xs uppercase text-slate-500">Estimated Total</p>
+                            <p className="text-2xl font-bold text-slate-900">
+                              {orderItems
+                                .filter((item) => item.price != null)
+                                .reduce((sum, item) => sum + (item.price || 0) * item.quantity, 0)
+                                .toFixed(2)}{' '}
+                              {orderItems.find((item) => item.currency)?.currency || 'USD'}
+                            </p>
+                          </div>
+                        </div>
+                      </>
+                    )}
+                  </div>
+                  <div className="px-6 py-4 border-t border-slate-100 flex justify-end gap-3">
+                    <button
+                      onClick={() => {
+                        setOrderItems([]);
+                        setIsOrdersModalOpen(false);
+                      }}
+                      className="px-4 py-2 text-sm font-medium text-slate-500 hover:text-slate-900 transition-colors"
+                    >
+                      Clear
+                    </button>
+                    <button className="px-6 py-2 bg-brand-600 text-white rounded-xl font-semibold text-sm shadow-lg shadow-brand-500/30 hover:bg-brand-700 transition-colors">
+                      Proceed to Checkout
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Quick Actions */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8 mt-12">
             <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl p-6 border border-blue-200">
@@ -385,7 +507,11 @@ const BuyerPage: React.FC = () => {
               </button>
             </div>
 
-            <div className="bg-gradient-to-br from-green-50 to-green-100 rounded-xl p-6 border border-green-200">
+            <div className="bg-gradient-to-br from-green-50 to-green-100 rounded-xl p-6 border border-green-200 relative">
+              <div className="absolute top-4 right-4 flex items-center gap-1 rounded-full border border-white/70 bg-white/80 text-green-700 px-3 py-1 text-xs font-semibold shadow-sm">
+                <ShoppingCart size={14} />
+                <span>{totalOrderCount}</span>
+              </div>
               <div className="flex items-center gap-4 mb-4">
                 <div className="w-12 h-12 bg-green-600 rounded-lg flex items-center justify-center">
                   <ShoppingCart className="text-white" size={24} />
@@ -395,7 +521,10 @@ const BuyerPage: React.FC = () => {
                   <p className="text-sm text-slate-600">Track your purchases</p>
                 </div>
               </div>
-              <button className="w-full bg-green-600 hover:bg-green-700 text-white font-medium py-2 rounded-lg transition-colors">
+              <button
+                onClick={() => setIsOrdersModalOpen(true)}
+                className="w-full bg-green-600 hover:bg-green-700 text-white font-medium py-2 rounded-lg transition-colors"
+              >
                 View Orders
               </button>
             </div>
