@@ -27,6 +27,80 @@ export interface ApiError {
   errors?: Record<string, string[]>;
 }
 
+// Buyer types
+export interface BuyerSellerSummary {
+  id: string;
+  name: string;
+  verified?: boolean;
+  rating?: number;
+}
+
+export interface BuyerProduct {
+  id: string;
+  name: string;
+  description?: string;
+  price: number;
+  currency: string;
+  image?: string;
+  images?: string[];
+  seller?: BuyerSellerSummary;
+  certification?: {
+    peCertified: boolean;
+    certificateNumber?: string;
+    certifiedBy?: string;
+    certifiedDate?: string;
+  };
+  stock?: number;
+  rating?: number;
+  reviewsCount?: number;
+  category?: string;
+  tags?: string[];
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface SearchProductsParams {
+  keyword?: string;
+  category?: string;
+  minPrice?: number;
+  maxPrice?: number;
+  page?: number;
+  limit?: number;
+  sort?: string;
+}
+
+export interface SearchProductsResponse {
+  products: BuyerProduct[];
+  pagination?: {
+    page: number;
+    limit: number;
+    total: number;
+    totalPages: number;
+  };
+}
+
+export interface FeaturedProductsResponse {
+  products: BuyerProduct[];
+}
+
+export interface AddToCartRequest {
+  productId: string;
+  quantity?: number;
+}
+
+export interface CartItem {
+  id: string;
+  productId: string;
+  quantity: number;
+  price: number;
+  subtotal: number;
+}
+
+export interface AddToCartResponse {
+  message: string;
+  cartItem: CartItem;
+}
+
 // Helper function to get auth token
 const getToken = (): string | null => {
   return localStorage.getItem('token');
@@ -135,6 +209,32 @@ export const authApi = {
     } catch {
       return false;
     }
+  },
+};
+
+const buildQueryString = (params: Record<string, unknown>): string => {
+  const query = Object.entries(params)
+    .filter(([, value]) => value !== undefined && value !== null && value !== '')
+    .map(([key, value]) => `${encodeURIComponent(key)}=${encodeURIComponent(String(value))}`)
+    .join('&');
+
+  return query ? `?${query}` : '';
+};
+
+export const buyerApi = {
+  searchProducts: async (params: SearchProductsParams = {}): Promise<SearchProductsResponse> => {
+    const query = buildQueryString(params);
+    return apiRequest<SearchProductsResponse>(`/buyer/products/search${query}`);
+  },
+  getFeaturedProducts: async (limit = 3): Promise<FeaturedProductsResponse> => {
+    const query = buildQueryString({ limit });
+    return apiRequest<FeaturedProductsResponse>(`/buyer/products/featured${query}`);
+  },
+  addToCart: async ({ productId, quantity = 1 }: AddToCartRequest): Promise<AddToCartResponse> => {
+    return apiRequest<AddToCartResponse>('/buyer/cart/add', {
+      method: 'POST',
+      body: JSON.stringify({ productId, quantity }),
+    });
   },
 };
 
