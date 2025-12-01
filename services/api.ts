@@ -57,6 +57,8 @@ export interface BuyerProduct {
   tags?: string[];
   createdAt?: string;
   updatedAt?: string;
+  historicalLowPrice?: number;
+  lastTransactionPrice?: number;
 }
 
 export interface SearchProductsParams {
@@ -221,10 +223,21 @@ const buildQueryString = (params: Record<string, unknown>): string => {
   return query ? `?${query}` : '';
 };
 
+export interface GetAllProductsParams {
+  page?: number;
+  limit?: number;
+  sort?: string;
+  category?: string;
+}
+
 export const buyerApi = {
   searchProducts: async (params: SearchProductsParams = {}): Promise<SearchProductsResponse> => {
-    const query = buildQueryString(params);
+    const query = buildQueryString(params as Record<string, unknown>);
     return apiRequest<SearchProductsResponse>(`/buyer/products/search${query}`);
+  },
+  getAllProducts: async (params: GetAllProductsParams = {}): Promise<SearchProductsResponse> => {
+    const query = buildQueryString(params as Record<string, unknown>);
+    return apiRequest<SearchProductsResponse>(`/buyer/products${query}`);
   },
   getFeaturedProducts: async (limit = 3): Promise<FeaturedProductsResponse> => {
     const query = buildQueryString({ limit });

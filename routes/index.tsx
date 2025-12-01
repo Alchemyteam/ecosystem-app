@@ -6,6 +6,8 @@ import HomePage from '../pages/HomePage';
 import DashboardPage from '../pages/DashboardPage';
 import ProfilePage from '../pages/ProfilePage';
 import BuyerPage from '../pages/BuyerPage';
+import ProductsListPage from '../pages/ProductsListPage';
+import AISearchPage from '../pages/AISearchPage';
 import SellerPage from '../pages/SellerPage';
 import PEPage from '../pages/PEPage';
 
@@ -82,6 +84,22 @@ const AppRoutes: React.FC = () => {
         element={
           <ProtectedRoute>
             <BuyerPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/buyer/products"
+        element={
+          <ProtectedRoute>
+            <ProductsListPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/buyer/ai-search"
+        element={
+          <ProtectedRoute>
+            <AISearchPage />
           </ProtectedRoute>
         }
       />

@@ -1,19 +1,24 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { authApi, getToken, ApiError } from '../services/api';
 
+export type UserRole = 'Buyer' | 'Seller' | 'PE';
+
 interface User {
   id: string;
   email: string;
   name?: string;
+  role?: UserRole;
 }
 
 interface AuthContextType {
   user: User | null;
+  currentRole: UserRole;
   isAuthenticated: boolean;
   isLoading: boolean;
   login: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
   register: (email: string, password: string, name?: string) => Promise<{ success: boolean; error?: string }>;
   logout: () => void;
+  setCurrentRole: (role: UserRole) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -21,6 +26,20 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [currentRole, setCurrentRoleState] = useState<UserRole>('Buyer');
+
+  // Load role from localStorage or use default
+  useEffect(() => {
+    const savedRole = localStorage.getItem('userRole') as UserRole;
+    if (savedRole && ['Buyer', 'Seller', 'PE'].includes(savedRole)) {
+      setCurrentRoleState(savedRole);
+    }
+  }, []);
+
+  const setCurrentRole = (role: UserRole) => {
+    setCurrentRoleState(role);
+    localStorage.setItem('userRole', role);
+  };
 
   // Load user info on mount
   useEffect(() => {
@@ -98,11 +117,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     <AuthContext.Provider
       value={{
         user,
+        currentRole,
         isAuthenticated: !!user,
         isLoading,
         login,
         register,
         logout,
+        setCurrentRole,
       }}
     >
       {children}
