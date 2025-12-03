@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import Header from '../components/Header';
-import Footer from '../components/Footer';
 import { useAuth } from '../contexts/AuthContext';
 import { User, Mail, Save } from 'lucide-react';
 
@@ -76,7 +75,6 @@ const ProfilePage: React.FC = () => {
           </div>
         </div>
       </main>
-      <Footer />
     </div>
   );
 };

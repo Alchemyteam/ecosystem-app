@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en-US">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -31,9 +31,19 @@
       }
     </script>
     <style>
+      html {
+        lang: en-US;
+      }
       body {
         font-family: 'Inter', sans-serif;
         scroll-behavior: smooth;
+        font-size: 14px; /* 缩小基础字体大小，从默认的 16px 改为 14px */
+      }
+      input[type="date"] {
+        font-family: 'Inter', sans-serif;
+      }
+      input[type="date"]::-webkit-calendar-picker-indicator {
+        cursor: pointer;
       }
       .glass-panel {
         background: rgba(255, 255, 255, 0.7);

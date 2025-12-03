@@ -18,12 +18,12 @@ const Hero: React.FC = () => {
               Ecosystem Platform
             </div>
             
-            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-slate-900 tracking-tight leading-[1.1] mb-6">
+            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-slate-900 tracking-tight leading-[1.1] mb-6">
               Strategic Sector <br className="hidden lg:block" />
               <span className="text-brand-600">Penetration & Growth</span>
             </h1>
             
-            <p className="text-lg text-slate-600 mb-8 leading-relaxed max-w-2xl mx-auto lg:mx-0">
+            <p className="text-base text-slate-600 mb-8 leading-relaxed max-w-2xl mx-auto lg:mx-0">
               A market-facing, neutral platform connecting Buyers, Sellers, and PEs. 
               Optimizing rentals, ensuring compliance, and driving liquidity in the infrastructure logistics sector.
             </p>
@@ -31,13 +31,13 @@ const Hero: React.FC = () => {
             <div className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4">
               <a 
                 href="#join"
-                className="w-full sm:w-auto px-8 py-4 bg-brand-600 hover:bg-brand-700 text-white rounded-xl font-semibold text-lg transition-all shadow-xl shadow-brand-500/30 flex items-center justify-center gap-2"
+                className="w-full sm:w-auto px-8 py-4 bg-brand-600 hover:bg-brand-700 text-white rounded-xl font-semibold text-base transition-all shadow-xl shadow-brand-500/30 flex items-center justify-center gap-2"
               >
                 Join the Ecosystem <ArrowRight className="w-5 h-5" />
               </a>
               <a 
                 href="#modules"
-                className="w-full sm:w-auto px-8 py-4 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-xl font-semibold text-lg transition-colors flex items-center justify-center"
+                className="w-full sm:w-auto px-8 py-4 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-xl font-semibold text-base transition-colors flex items-center justify-center"
               >
                 Explore Modules
               </a>
@@ -77,7 +77,7 @@ const Hero: React.FC = () => {
                            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" /></svg>
                         </div>
                         <div>
-                            <div className="text-2xl font-bold text-slate-800">98%</div>
+                            <div className="text-xl font-bold text-slate-800">98%</div>
                             <div className="text-xs text-slate-500">Collection Rate</div>
                         </div>
                     </div>
@@ -86,7 +86,7 @@ const Hero: React.FC = () => {
                            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" /></svg>
                         </div>
                         <div>
-                            <div className="text-2xl font-bold text-slate-800">-50%</div>
+                            <div className="text-xl font-bold text-slate-800">-50%</div>
                             <div className="text-xs text-slate-500">Idle Stock</div>
                         </div>
                     </div>

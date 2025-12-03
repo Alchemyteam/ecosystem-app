@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import Header from '../components/Header';
-import Footer from '../components/Footer';
 import { useAuth, UserRole } from '../contexts/AuthContext';
 import {
   User,
@@ -596,7 +595,6 @@ const HomePage: React.FC = () => {
           </div>
         </div>
       </main>
-      <Footer />
     </div>
   );
 };

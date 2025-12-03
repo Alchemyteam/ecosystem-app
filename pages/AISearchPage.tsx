@@ -1,8 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useLocation, Link } from 'react-router-dom';
 import Header from '../components/Header';
-import Footer from '../components/Footer';
-import { BuyerProduct } from '../services/api';
+
+import { BuyerProduct, ApiError } from '../services/api';
+import { TableData, ActionData } from '../types/chat';
+import { sendChatMessage } from '../services/chatApi';
+import { getToken } from '../services/api';
 import {
   Sparkles,
   Send,
@@ -19,6 +22,8 @@ import {
   FileText,
   User as UserIcon,
   HelpCircle,
+  AlertCircle,
+  CheckCircle2,
 } from 'lucide-react';
 
 interface Message {
@@ -26,6 +31,8 @@ interface Message {
   role: 'user' | 'assistant';
   content: string;
   timestamp: Date;
+  tableData?: TableData;
+  actionData?: ActionData;
 }
 
 const AISearchPage: React.FC = () => {
@@ -34,7 +41,22 @@ const AISearchPage: React.FC = () => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputValue, setInputValue] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [conversationId, setConversationId] = useState<string | undefined>(undefined);
+  const [error, setError] = useState<string | null>(null);
   const [expandedMenus, setExpandedMenus] = useState<Set<string>>(new Set(['products', 'orders', 'favorites', 'account']));
+  const [showDebug, setShowDebug] = useState(false);
+  const [lastResponse, setLastResponse] = useState<any>(null);
+  const [showExamples, setShowExamples] = useState(false);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  // 搜索示例
+  const searchExamples = [
+    { category: 'By Item Code', examples: ['TI00040', 'Find item code TI00040', 'What is the price range of TI00040'] },
+    { category: 'By Item Name', examples: ['Spray Paint', 'LEAKAGE CURRENT CLAMP METER', 'Safety Helmet'] },
+    { category: 'By Category', examples: ['Site Safety Equipment', 'Safety Equipment', 'Filters', 'Maintenance Chemicals'] },
+    { category: 'By Brand', examples: ['Brand AET', 'Air Liquide Brand', 'Show all products from AET'] },
+    { category: 'Combined Search', examples: ['Site Safety Equipment + Air Liquide + Last Year', 'Filters + AET + Price 100-500'] },
+  ];
 
   const toggleMenu = (menuKey: string) => {
     setExpandedMenus((prev) => {
@@ -48,6 +70,11 @@ const AISearchPage: React.FC = () => {
     });
   };
 
+  // Scroll to bottom when messages change
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages]);
+
   useEffect(() => {
     // Initialize with product context if available
     if (product) {
@@ -55,57 +82,101 @@ const AISearchPage: React.FC = () => {
         {
           id: '1',
           role: 'assistant',
-          content: `Hello! I can help you with information about **${product.name}**. What would you like to know?`,
+          content: `Hello! I can help you find information about **${product.name}**. You can ask me about:\n\n- Historical prices\n- Product comparisons\n- Supplier information\n- Or any other related questions`,
           timestamp: new Date(),
         },
       ]);
-      setInputValue(`Tell me about ${product.name}`);
+      setInputValue(`What is the historical price of ${product.name}?`);
     } else {
       setMessages([
         {
           id: '1',
           role: 'assistant',
-          content: 'Hello! I\'m your AI assistant. I can help you search for products, compare prices, answer questions, and more. What would you like to know?',
+          content: 'Hello! I am your AI Material Search Assistant. I can help you with:\n\n🔍 **Search Materials** - By code, name, category, brand, etc.\n📊 **View Historical Data** - Price trends, transaction records\n💡 **Smart Recommendations** - Find suitable products based on your needs\n\nTry entering an item code (e.g., TI00040) or name (e.g., Safety Shoes) to start searching!',
           timestamp: new Date(),
         },
       ]);
     }
   }, [product]);
 
-  const handleSend = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!inputValue.trim() || isLoading) return;
+  const handleSend = async (e?: React.FormEvent, messageText?: string) => {
+    if (e) {
+      e.preventDefault();
+    }
+    const messageToSend = messageText || inputValue;
+    if (!messageToSend.trim() || isLoading) return;
 
     const userMessage: Message = {
       id: Date.now().toString(),
       role: 'user',
-      content: inputValue,
+      content: messageToSend,
       timestamp: new Date(),
     };
 
     setMessages((prev) => [...prev, userMessage]);
     setInputValue('');
+    setError(null);
     setIsLoading(true);
+    setShowExamples(false);
 
-    // Simulate AI response (replace with actual API call)
-    setTimeout(() => {
+    try {
+      const token = getToken();
+      if (!token) {
+        throw new Error('Unauthorized: Please login first');
+      }
+
+      const response = await sendChatMessage(messageToSend, token, conversationId);
+
+      // Debug: Log the response to see what we're getting
+      console.log('AI Response:', response);
+      console.log('Table Data:', response.tableData);
+      console.log('Action Data:', response.actionData);
+
+      // Store last response for debugging
+      setLastResponse(response);
+
+      // Update conversation ID
+      if (response.conversationId) {
+        setConversationId(response.conversationId);
+      }
+
       const assistantMessage: Message = {
         id: (Date.now() + 1).toString(),
         role: 'assistant',
-        content: `I understand you're asking about "${userMessage.content}". This is a simulated response. In a real implementation, this would connect to an AI service to provide intelligent answers about products, pricing, specifications, and more.`,
+        content: response.response,
+        timestamp: new Date(),
+        tableData: response.tableData,
+        actionData: response.actionData,
+      };
+
+      setMessages((prev) => [...prev, assistantMessage]);
+    } catch (err) {
+      const apiError = err as ApiError | Error;
+      const errorMessage = apiError instanceof Error ? apiError.message : (apiError as ApiError).message || 'Failed to send message, please try again later';
+      setError(errorMessage);
+
+      const errorMsg: Message = {
+        id: (Date.now() + 1).toString(),
+        role: 'assistant',
+        content: `Sorry, encountered an error: ${errorMessage}`,
         timestamp: new Date(),
       };
-      setMessages((prev) => [...prev, assistantMessage]);
+      setMessages((prev) => [...prev, errorMsg]);
+    } finally {
       setIsLoading(false);
-    }, 1500);
+    }
+  };
+
+  const handleExampleClick = (example: string) => {
+    handleSend(undefined, example);
   };
 
   return (
     <div className="min-h-screen bg-slate-50 font-sans text-slate-900">
       <Header />
-      <main className="pt-20 flex">
+      <main className="pt-20 flex h-screen overflow-hidden">
         {/* Sidebar */}
-        <aside className="w-64 bg-white border-r border-slate-200 min-h-[calc(100vh-5rem)] sticky top-20 overflow-y-auto">
+        <aside className="w-64 bg-white border-r border-slate-200 h-full overflow-y-auto">
           <nav className="p-4 space-y-1">
             {/* Home */}
             <Link
@@ -318,7 +389,7 @@ const AISearchPage: React.FC = () => {
         </aside>
 
         {/* Main Content */}
-        <div className="flex-1 flex flex-col">
+        <div className="flex-1 flex flex-col relative h-full overflow-hidden">
           {/* Header */}
           <div className="bg-white border-b border-slate-200 px-6 py-4">
             <div className="flex items-center gap-2 text-sm text-slate-600 mb-2">
@@ -332,14 +403,24 @@ const AISearchPage: React.FC = () => {
               <span>/</span>
               <span className="text-slate-900">AI Search</span>
             </div>
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-gradient-to-br from-purple-600 to-indigo-600 rounded-xl flex items-center justify-center">
-                <Sparkles className="text-white" size={20} />
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-gradient-to-br from-purple-600 to-indigo-600 rounded-xl flex items-center justify-center">
+                  <Sparkles className="text-white" size={20} />
+                </div>
+                <div>
+                  <h1 className="text-xl font-bold text-slate-900">AI Material Search</h1>
+                  <p className="text-sm text-slate-600">Smart search for material info, historical prices, transaction records, etc.</p>
+                </div>
               </div>
-              <div>
-                <h1 className="text-2xl font-bold text-slate-900">AI Search</h1>
-                <p className="text-sm text-slate-600">Ask questions about products, pricing, and more</p>
-              </div>
+              {process.env.NODE_ENV === 'development' && (
+                <button
+                  onClick={() => setShowDebug(!showDebug)}
+                  className="px-3 py-1.5 text-xs bg-slate-100 hover:bg-slate-200 rounded-lg text-slate-600 font-medium transition-colors"
+                >
+                  {showDebug ? 'Hide Debug' : 'Show Debug'}
+                </button>
+              )}
             </div>
             {product && (
               <div className="mt-4 p-3 bg-brand-50 border border-brand-200 rounded-lg">
@@ -347,10 +428,25 @@ const AISearchPage: React.FC = () => {
                 <p className="font-medium text-slate-900">{product.name}</p>
               </div>
             )}
+            {showDebug && lastResponse && (
+              <div className="mt-4 p-4 bg-slate-100 border border-slate-300 rounded-lg">
+                <p className="text-xs font-semibold text-slate-700 mb-2">Debug Info - Last Response:</p>
+                <pre className="text-xs bg-white p-3 rounded border border-slate-200 overflow-auto max-h-60">
+                  {JSON.stringify(lastResponse, null, 2)}
+                </pre>
+                <div className="mt-2 text-xs text-slate-600">
+                  <p>Has tableData: {lastResponse.tableData ? 'Yes' : 'No'}</p>
+                  <p>Has actionData: {lastResponse.actionData ? 'Yes' : 'No'}</p>
+                  {lastResponse.tableData && (
+                    <p>Table rows: {lastResponse.tableData.rows?.length || 0}</p>
+                  )}
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Chat Area */}
-          <div className="flex-1 overflow-y-auto px-6 py-6 space-y-4">
+          <div className="flex-1 overflow-y-auto px-6 py-6 pb-24 space-y-4">
             {messages.map((message) => (
               <div
                 key={message.id}
@@ -362,11 +458,10 @@ const AISearchPage: React.FC = () => {
                   </div>
                 )}
                 <div
-                  className={`max-w-3xl rounded-2xl px-4 py-3 ${
-                    message.role === 'user'
-                      ? 'bg-brand-600 text-white'
-                      : 'bg-white border border-slate-200 text-slate-900'
-                  }`}
+                  className={`max-w-3xl rounded-2xl px-4 py-3 ${message.role === 'user'
+                    ? 'bg-brand-600 text-white'
+                    : 'bg-white border border-slate-200 text-slate-900'
+                    }`}
                 >
                   <div className="prose prose-sm max-w-none">
                     {message.content.split('\n').map((line, i) => (
@@ -375,6 +470,58 @@ const AISearchPage: React.FC = () => {
                       </p>
                     ))}
                   </div>
+
+                  {/* Table Data Display */}
+                  {message.tableData && (
+                    <div className="mt-4 border border-slate-200 rounded-lg overflow-hidden">
+                      <div className="bg-slate-50 px-4 py-2 border-b border-slate-200">
+                        <h4 className="font-semibold text-slate-900">{message.tableData.title}</h4>
+                        {message.tableData.description && (
+                          <p className="text-xs text-slate-600 mt-1">{message.tableData.description}</p>
+                        )}
+                      </div>
+                      <div className="overflow-x-auto max-h-96 overflow-y-auto">
+                        <table className="w-full text-sm">
+                          <thead className="bg-slate-100 sticky top-0 z-10">
+                            <tr>
+                              {message.tableData.headers.map((header, idx) => (
+                                <th key={idx} className="px-4 py-2 text-left font-semibold text-slate-700 border-b border-slate-200">
+                                  {header}
+                                </th>
+                              ))}
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {message.tableData.rows.map((row, rowIdx) => (
+                              <tr key={rowIdx} className="border-b border-slate-100 hover:bg-slate-50">
+                                {message.tableData!.headers.map((header, colIdx) => (
+                                  <td key={colIdx} className="px-4 py-2 text-slate-700">
+                                    {String(row[header] ?? '')}
+                                  </td>
+                                ))}
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Action Data Display */}
+                  {message.actionData && (
+                    <div className="mt-4 p-3 bg-brand-50 border border-brand-200 rounded-lg">
+                      <div className="flex items-start gap-2">
+                        <CheckCircle2 className="text-brand-600 flex-shrink-0 mt-0.5" size={18} />
+                        <div className="flex-1">
+                          <p className="text-sm font-medium text-brand-900">{message.actionData.message}</p>
+                          <p className="text-xs text-brand-700 mt-1">
+                            Action: {message.actionData.actionType}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
                   <p className={`text-xs mt-2 ${message.role === 'user' ? 'text-brand-100' : 'text-slate-400'}`}>
                     {message.timestamp.toLocaleTimeString()}
                   </p>
@@ -396,32 +543,104 @@ const AISearchPage: React.FC = () => {
                 </div>
               </div>
             )}
+            <div ref={messagesEndRef} />
           </div>
 
-          {/* Input Area */}
-          <div className="bg-white border-t border-slate-200 px-6 py-4">
+          {/* Input Area - Fixed at bottom */}
+          <div className="sticky bottom-0 bg-white border-t border-slate-200 px-6 py-4 z-10 shadow-lg">
+            {/* Search Examples */}
+            {showExamples && (
+              <div className="mb-4 p-4 bg-slate-50 border border-slate-200 rounded-xl">
+                <div className="flex items-center justify-between mb-3">
+                  <h3 className="text-sm font-semibold text-slate-900">Search Examples</h3>
+                  <button
+                    onClick={() => setShowExamples(false)}
+                    className="text-xs text-slate-500 hover:text-slate-700"
+                  >
+                    Hide
+                  </button>
+                </div>
+                <div className="space-y-3 max-h-64 overflow-y-auto">
+                  {searchExamples.map((category, idx) => (
+                    <div key={idx}>
+                      <p className="text-xs font-medium text-slate-600 mb-1.5">{category.category}</p>
+                      <div className="flex flex-wrap gap-2">
+                        {category.examples.map((example, exampleIdx) => (
+                          <button
+                            key={exampleIdx}
+                            onClick={() => handleExampleClick(example)}
+                            className="px-3 py-1.5 text-xs bg-white border border-slate-200 rounded-lg hover:bg-brand-50 hover:border-brand-300 hover:text-brand-700 transition-colors text-left"
+                            disabled={isLoading}
+                          >
+                            {example}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {error && (
+              <div className="mb-3 p-3 bg-red-50 border border-red-200 rounded-lg flex items-center gap-2">
+                <AlertCircle className="text-red-600 flex-shrink-0" size={18} />
+                <p className="text-sm text-red-700">{error}</p>
+              </div>
+            )}
             <form onSubmit={handleSend} className="flex gap-3">
-              <input
-                type="text"
-                value={inputValue}
-                onChange={(e) => setInputValue(e.target.value)}
-                placeholder="Ask a question about products, pricing, specifications..."
-                className="flex-1 px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none"
-                disabled={isLoading}
-              />
+              <div className="flex-1 relative">
+                <input
+                  type="text"
+                  value={inputValue}
+                  onChange={(e) => {
+                    setInputValue(e.target.value);
+                    setError(null);
+                  }}
+                  onFocus={() => {
+                    if (messages.length <= 1) {
+                      setShowExamples(true);
+                    }
+                  }}
+                  placeholder="Enter search query, e.g., TI00040 or Safety Shoes or Site Safety Equipment + Air Liquide + Last Year"
+                  className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none"
+                  disabled={isLoading}
+                />
+                {!showExamples && (
+                  <button
+                    type="button"
+                    onClick={() => setShowExamples(true)}
+                    className="absolute right-2 top-1/2 -translate-y-1/2 px-2 py-1 text-xs text-slate-500 hover:text-slate-700"
+                  >
+                    View Examples
+                  </button>
+                )}
+              </div>
               <button
                 type="submit"
                 disabled={!inputValue.trim() || isLoading}
                 className="px-6 py-3 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-xl font-medium hover:from-purple-700 hover:to-indigo-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 shadow-md hover:shadow-lg"
               >
-                <Send size={18} />
-                Send
+                {isLoading ? (
+                  <>
+                    <Loader2 className="animate-spin" size={18} />
+                    Searching
+                  </>
+                ) : (
+                  <>
+                    <Send size={18} />
+                    Send
+                  </>
+                )}
               </button>
             </form>
+            <div className="mt-2 text-xs text-slate-500">
+              💡 Hint: Supports search by item code, name, category, brand, and combined conditions
+            </div>
           </div>
         </div>
       </main>
-      <Footer />
+
     </div>
   );
 };

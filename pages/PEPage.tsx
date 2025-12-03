@@ -1,6 +1,5 @@
 import React from 'react';
 import Header from '../components/Header';
-import Footer from '../components/Footer';
 import { Shield, FileCheck, CheckCircle2, Clock, AlertCircle, Award, ClipboardList, Users } from 'lucide-react';
 
 const PEPage: React.FC = () => {
@@ -193,7 +192,6 @@ const PEPage: React.FC = () => {
           </div>
         </div>
       </main>
-      <Footer />
     </div>
   );
 };

@@ -1,6 +1,9 @@
 // API Configuration
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api';
 
+// Import types
+import type { SalesDataQueryParams } from '../types/salesData';
+
 // Types
 export interface LoginRequest {
   email: string;
@@ -101,6 +104,32 @@ export interface CartItem {
 export interface AddToCartResponse {
   message: string;
   cartItem: CartItem;
+}
+
+// Chat types
+export interface ChatMessageRequest {
+  message: string;
+  conversationId?: string;
+}
+
+export interface ChatTableData {
+  title: string;
+  headers: string[];
+  rows: Record<string, unknown>[];
+  description?: string;
+}
+
+export interface ChatActionData {
+  actionType: string;
+  parameters: Record<string, unknown>;
+  message: string;
+}
+
+export interface ChatMessageResponse {
+  response: string;
+  conversationId: string;
+  tableData?: ChatTableData;
+  actionData?: ChatActionData;
 }
 
 // Helper function to get auth token
@@ -228,6 +257,41 @@ export interface GetAllProductsParams {
   limit?: number;
   sort?: string;
   category?: string;
+  keyword?: string;
+  // 交易相关
+  minDate?: string;
+  maxDate?: string;
+  txNo?: string;
+  minQty?: number;
+  maxQty?: number;
+  minPrice?: number;
+  maxPrice?: number;
+  minValue?: number;
+  maxValue?: number;
+  // 买家相关
+  buyerCode?: string;
+  buyerName?: string;
+  // 产品相关
+  itemCode?: string;
+  itemName?: string;
+  productHierarchy3?: string;
+  itemType?: string;
+  model?: string;
+  material?: string;
+  uom?: string;
+  // 品牌和性能
+  brandCode?: string;
+  performance?: string;
+  performance1?: string;
+  // 成本和功能
+  minUnitCost?: number;
+  maxUnitCost?: number;
+  function?: string;
+  // 行业相关
+  sector?: string;
+  subSector?: string;
+  // 其他
+  source?: string;
 }
 
 export const buyerApi = {
@@ -235,9 +299,83 @@ export const buyerApi = {
     const query = buildQueryString(params as Record<string, unknown>);
     return apiRequest<SearchProductsResponse>(`/buyer/products/search${query}`);
   },
-  getAllProducts: async (params: GetAllProductsParams = {}): Promise<SearchProductsResponse> => {
-    const query = buildQueryString(params as Record<string, unknown>);
-    return apiRequest<SearchProductsResponse>(`/buyer/products${query}`);
+  getAllProducts: async (params: GetAllProductsParams = {}): Promise<SalesDataResponse> => {
+    // 使用新的 getSalesData API 函数
+    const { getSalesData } = await import('./salesDataApi');
+    const token = getToken();
+    if (!token) {
+      throw new Error('未授权：请先登录');
+    }
+    
+    // 转换参数格式
+    // 确保 sort 参数只使用支持的值
+    let sortValue: 'newest' | 'price_asc' | 'price_desc' | undefined = undefined;
+    if (params.sort) {
+      const validSorts: ('newest' | 'price_asc' | 'price_desc')[] = ['newest', 'price_asc', 'price_desc'];
+      if (validSorts.includes(params.sort as any)) {
+        sortValue = params.sort as 'newest' | 'price_asc' | 'price_desc';
+      } else {
+        // 如果是不支持的 sort 值，默认使用 'newest'
+        console.warn(`不支持的 sort 值: ${params.sort}，使用默认值 'newest'`);
+        sortValue = 'newest';
+      }
+    }
+    
+    // 只传递 API 文档中定义的参数，过滤掉任何其他参数
+    const queryParams: SalesDataQueryParams = {};
+    if (params.page !== undefined) queryParams.page = params.page;
+    if (params.limit !== undefined) queryParams.limit = params.limit;
+    if (sortValue !== undefined) queryParams.sort = sortValue;
+    if (params.category !== undefined && params.category !== 'all') {
+      queryParams.category = params.category;
+    }
+    if (params.keyword !== undefined && params.keyword.trim() !== '') {
+      queryParams.keyword = params.keyword.trim();
+    }
+    // 添加筛选参数（这些参数需要后端支持）- 根据 sales_data 表格结构
+    // 交易相关
+    if (params.minDate !== undefined) queryParams.minDate = params.minDate;
+    if (params.maxDate !== undefined) queryParams.maxDate = params.maxDate;
+    if (params.txNo !== undefined && params.txNo.trim() !== '') queryParams.txNo = params.txNo.trim();
+    if (params.minQty !== undefined) queryParams.minQty = params.minQty;
+    if (params.maxQty !== undefined) queryParams.maxQty = params.maxQty;
+    if (params.minPrice !== undefined) queryParams.minPrice = params.minPrice;
+    if (params.maxPrice !== undefined) queryParams.maxPrice = params.maxPrice;
+    if (params.minValue !== undefined) queryParams.minValue = params.minValue;
+    if (params.maxValue !== undefined) queryParams.maxValue = params.maxValue;
+    // 买家相关
+    if (params.buyerCode !== undefined && params.buyerCode.trim() !== '') queryParams.buyerCode = params.buyerCode.trim();
+    if (params.buyerName !== undefined && params.buyerName.trim() !== '') queryParams.buyerName = params.buyerName.trim();
+    // 产品相关
+    if (params.itemCode !== undefined && params.itemCode.trim() !== '') queryParams.itemCode = params.itemCode.trim();
+    if (params.itemName !== undefined && params.itemName.trim() !== '') queryParams.itemName = params.itemName.trim();
+    if (params.productHierarchy3 !== undefined && params.productHierarchy3.trim() !== '') queryParams.productHierarchy3 = params.productHierarchy3.trim();
+    if (params.itemType !== undefined && params.itemType.trim() !== '') queryParams.itemType = params.itemType.trim();
+    if (params.model !== undefined && params.model.trim() !== '') queryParams.model = params.model.trim();
+    if (params.material !== undefined && params.material.trim() !== '') queryParams.material = params.material.trim();
+    if (params.uom !== undefined && params.uom.trim() !== '') queryParams.uom = params.uom.trim();
+    // 品牌和性能
+    if (params.brandCode !== undefined && params.brandCode.trim() !== '') queryParams.brandCode = params.brandCode.trim();
+    if (params.performance !== undefined && params.performance.trim() !== '') queryParams.performance = params.performance.trim();
+    if (params.performance1 !== undefined && params.performance1.trim() !== '') queryParams.performance1 = params.performance1.trim();
+    // 成本和功能
+    if (params.minUnitCost !== undefined) queryParams.minUnitCost = params.minUnitCost;
+    if (params.maxUnitCost !== undefined) queryParams.maxUnitCost = params.maxUnitCost;
+    if (params.function !== undefined && params.function.trim() !== '') queryParams.function = params.function.trim();
+    // 行业相关
+    if (params.sector !== undefined && params.sector.trim() !== '') queryParams.sector = params.sector.trim();
+    if (params.subSector !== undefined && params.subSector.trim() !== '') queryParams.subSector = params.subSector.trim();
+    // 其他
+    if (params.source !== undefined && params.source.trim() !== '') queryParams.source = params.source.trim();
+    
+    try {
+      const response = await getSalesData(queryParams, token);
+      return response;
+    } catch (error) {
+      console.error('=== API Error ===');
+      console.error('Error fetching sales data:', error);
+      throw error;
+    }
   },
   getFeaturedProducts: async (limit = 3): Promise<FeaturedProductsResponse> => {
     const query = buildQueryString({ limit });
@@ -248,6 +386,31 @@ export const buyerApi = {
       method: 'POST',
       body: JSON.stringify({ productId, quantity }),
     });
+  },
+};
+
+// Chat API functions
+// 注意：为了向后兼容，保留此 API
+// 新的实现请使用 services/chatApi.ts 中的 sendChatMessage
+export const chatApi = {
+  sendMessage: async (request: ChatMessageRequest): Promise<ChatMessageResponse> => {
+    // 使用新的 chatApi 实现
+    const { sendChatMessage } = await import('./chatApi');
+    const token = getToken();
+    if (!token) {
+      throw new Error('未授权：请先登录');
+    }
+    const response = await sendChatMessage(request.message, token, request.conversationId);
+    // 转换响应格式以保持兼容性
+    return {
+      response: response.response,
+      conversationId: response.conversationId,
+      tableData: response.tableData,
+      actionData: response.actionData,
+    };
+  },
+  healthCheck: async (): Promise<{ status: string; service: string }> => {
+    return apiRequest<{ status: string; service: string }>('/chat/health');
   },
 };
 

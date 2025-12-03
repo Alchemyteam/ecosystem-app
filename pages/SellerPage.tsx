@@ -1,6 +1,5 @@
 import React from 'react';
 import Header from '../components/Header';
-import Footer from '../components/Footer';
 import { Store, Plus, BarChart3, Package, DollarSign, Users } from 'lucide-react';
 
 const SellerPage: React.FC = () => {
@@ -143,7 +142,6 @@ const SellerPage: React.FC = () => {
           </div>
         </div>
       </main>
-      <Footer />
     </div>
   );
 };

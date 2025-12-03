@@ -1,6 +1,5 @@
 import React from 'react';
 import Header from '../components/Header';
-import Footer from '../components/Footer';
 import { BarChart3, TrendingUp, Users, Package } from 'lucide-react';
 
 const DashboardPage: React.FC = () => {
@@ -92,7 +91,6 @@ const DashboardPage: React.FC = () => {
           </div>
         </div>
       </main>
-      <Footer />
     </div>
   );
 };
