@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import Header from '../components/Header';
-import { buyerApi } from '../services/api';
+import { buyerApi, getToken } from '../services/api';
 import { SalesData } from '../types/salesData';
 // 可选：使用新的 useSalesData Hook
 // import { useSalesData } from '../hooks/useSalesData';
@@ -148,17 +148,40 @@ const ProductsListPage: React.FC = () => {
     { label: 'Rating: Highest', value: 'rating_desc' },
   ];
 
-  // 获取分类选项（从所有数据中提取）
+  // 从后端获取分类选项
   const fetchCategoryOptions = async () => {
     try {
-      // 获取更多数据来提取完整的分类列表（使用较大的 limit）
-      const response = await buyerApi.getAllProducts({ page: 1, limit: 1000, sort: 'newest' });
-      const allData = response.data || [];
-      const categories = extractCategoryOptions(allData);
-      setCategoryOptions(categories);
+      const token = getToken();
+      if (!token) {
+        console.warn('No token available for fetching categories');
+        return;
+      }
+      
+      // 从后端 API 获取分类列表
+      const { getCategoryOptions } = await import('../services/salesDataApi');
+      const categories = await getCategoryOptions(token);
+      
+      // 格式化分类选项
+      const formattedCategories = [
+        { label: 'All Categories', value: 'all' },
+        ...categories.map((category) => ({
+          label: category,
+          value: category,
+        })),
+      ];
+      
+      setCategoryOptions(formattedCategories);
     } catch (err) {
-      console.error('Failed to fetch category options:', err);
-      // 如果失败，继续使用当前数据提取的分类
+      console.error('Failed to fetch category options from backend:', err);
+      // 如果后端接口不存在或失败，回退到从当前数据提取分类
+      try {
+        const response = await buyerApi.getAllProducts({ page: 1, limit: 100, sort: 'newest' });
+        const allData = response.data || [];
+        const categories = extractCategoryOptions(allData);
+        setCategoryOptions(categories);
+      } catch (fallbackErr) {
+        console.error('Fallback category extraction also failed:', fallbackErr);
+      }
     }
   };
 
@@ -285,9 +308,7 @@ const ProductsListPage: React.FC = () => {
 
       setProducts(productsData);
       
-      // 从响应数据中提取分类选项
-      const categories = extractCategoryOptions(productsData);
-      setCategoryOptions(categories);
+      // 分类选项已从后端获取，不需要从当前数据提取
       
       // 使用后端返回的分页信息
       setTotalPages(response.pagination?.totalPages || 1);

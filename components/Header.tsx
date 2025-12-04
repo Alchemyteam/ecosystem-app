@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { NAVIGATION } from '../constants';
-import { Menu, X, LogOut, User } from 'lucide-react';
+import { Menu, X, LogOut, User, Database } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 
 const Header: React.FC = () => {
@@ -65,6 +65,17 @@ const Header: React.FC = () => {
             }`}
           >
             Buyer
+          </Link>
+          <Link
+            to="/buyer/sales-data-management"
+            className={`text-sm font-medium transition-colors flex items-center gap-1 ${
+              location.pathname === '/buyer/sales-data-management' 
+                ? 'text-brand-600' 
+                : 'text-slate-600 hover:text-brand-600'
+            }`}
+          >
+            <Database size={16} />
+            Data Management
           </Link>
           <Link
             to="/seller"
@@ -165,6 +176,18 @@ const Header: React.FC = () => {
             onClick={() => setIsMobileMenuOpen(false)}
           >
             Buyer
+          </Link>
+          <Link
+            to="/buyer/sales-data-management"
+            className={`text-base font-medium block flex items-center gap-2 ${
+              location.pathname === '/buyer/sales-data-management' 
+                ? 'text-brand-600' 
+                : 'text-slate-600 hover:text-brand-600'
+            }`}
+            onClick={() => setIsMobileMenuOpen(false)}
+          >
+            <Database size={18} />
+            Data Management
           </Link>
           <Link
             to="/seller"

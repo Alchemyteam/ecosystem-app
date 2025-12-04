@@ -1,8 +1,46 @@
-import { SalesDataListResponse, SalesDataQueryParams } from '../types/salesData';
+import { SalesData, SalesDataListResponse, SalesDataQueryParams } from '../types/salesData';
 import { getToken } from './api';
 
 // 使用与 services/api.ts 相同的方式获取 API_BASE_URL
 const API_BASE_URL = (import.meta as any).env?.VITE_API_BASE_URL || 'http://localhost:8000/api';
+
+/**
+ * 获取所有分类选项（Product Hierarchy 3 的不重复值）
+ * @param token 认证 token（可选，如果不提供则从 localStorage 获取）
+ * @returns 分类选项数组
+ */
+export async function getCategoryOptions(token?: string): Promise<string[]> {
+  const authToken = token || getToken();
+  if (!authToken) {
+    throw new Error('未授权：请先登录');
+  }
+
+  const url = `${API_BASE_URL}/buyer/sales-data/categories`;
+
+  try {
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${authToken}`,
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      const errorMessage = errorData.message || errorData.error || `请求失败：${response.status}`;
+      throw new Error(errorMessage);
+    }
+
+    const data = await response.json();
+    // 假设后端返回格式为: { categories: string[] } 或直接返回 string[]
+    return Array.isArray(data) ? data : (data.categories || []);
+  } catch (err) {
+    const error = err as Error;
+    console.error('Error in getCategoryOptions:', error);
+    throw error;
+  }
+}
 
 /**
  * 获取销售数据列表
@@ -171,5 +209,129 @@ export async function getSalesData(
   }
   
   return await response.json();
+}
+
+/**
+ * 创建销售数据
+ * @param data 销售数据
+ * @param token 认证 token（可选，如果不提供则从 localStorage 获取）
+ * @returns 创建的销售数据
+ */
+export async function createSalesData(
+  data: Partial<SalesData>,
+  token?: string
+): Promise<SalesData> {
+  const authToken = token || getToken();
+  if (!authToken) {
+    throw new Error('未授权：请先登录');
+  }
+
+  const url = `${API_BASE_URL}/buyer/sales-data`;
+
+  try {
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${authToken}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(data),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      const errorMessage = errorData.message || errorData.error || `请求失败：${response.status}`;
+      throw new Error(errorMessage);
+    }
+
+    return await response.json();
+  } catch (err) {
+    const error = err as Error;
+    console.error('Error in createSalesData:', error);
+    throw error;
+  }
+}
+
+/**
+ * 更新销售数据
+ * @param txNo 交易编号（唯一标识）
+ * @param data 要更新的销售数据
+ * @param token 认证 token（可选，如果不提供则从 localStorage 获取）
+ * @returns 更新后的销售数据
+ */
+export async function updateSalesData(
+  txNo: string,
+  data: Partial<SalesData>,
+  token?: string
+): Promise<SalesData> {
+  const authToken = token || getToken();
+  if (!authToken) {
+    throw new Error('未授权：请先登录');
+  }
+
+  const url = `${API_BASE_URL}/buyer/sales-data/${encodeURIComponent(txNo)}`;
+
+  try {
+    const response = await fetch(url, {
+      method: 'PUT',
+      headers: {
+        'Authorization': `Bearer ${authToken}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(data),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      const errorMessage = errorData.message || errorData.error || `请求失败：${response.status}`;
+      throw new Error(errorMessage);
+    }
+
+    return await response.json();
+  } catch (err) {
+    const error = err as Error;
+    console.error('Error in updateSalesData:', error);
+    throw error;
+  }
+}
+
+/**
+ * 删除销售数据
+ * @param txNo 交易编号（唯一标识）
+ * @param token 认证 token（可选，如果不提供则从 localStorage 获取）
+ * @returns 删除成功消息
+ */
+export async function deleteSalesData(
+  txNo: string,
+  token?: string
+): Promise<{ message: string }> {
+  const authToken = token || getToken();
+  if (!authToken) {
+    throw new Error('未授权：请先登录');
+  }
+
+  const url = `${API_BASE_URL}/buyer/sales-data/${encodeURIComponent(txNo)}`;
+
+  try {
+    const response = await fetch(url, {
+      method: 'DELETE',
+      headers: {
+        'Authorization': `Bearer ${authToken}`,
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      const errorMessage = errorData.message || errorData.error || `请求失败：${response.status}`;
+      throw new Error(errorMessage);
+    }
+
+    return await response.json();
+  } catch (err) {
+    const error = err as Error;
+    console.error('Error in deleteSalesData:', error);
+    throw error;
+  }
 }
 

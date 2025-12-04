@@ -10,6 +10,7 @@ import ProductsListPage from '../pages/ProductsListPage';
 import AISearchPage from '../pages/AISearchPage';
 import SellerPage from '../pages/SellerPage';
 import PEPage from '../pages/PEPage';
+import SalesDataManagementPage from '../pages/SalesDataManagementPage';
 
 // Protected Route Component
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -100,6 +101,14 @@ const AppRoutes: React.FC = () => {
         element={
           <ProtectedRoute>
             <AISearchPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/buyer/sales-data-management"
+        element={
+          <ProtectedRoute>
+            <SalesDataManagementPage />
           </ProtectedRoute>
         }
       />
