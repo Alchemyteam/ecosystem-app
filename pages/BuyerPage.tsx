@@ -179,9 +179,9 @@ const BuyerPage: React.FC = () => {
   return (
     <div className="min-h-screen bg-slate-50 font-sans text-slate-900">
       <Header />
-      <main className="pt-20 flex h-[calc(100vh-5rem)]">
+      <main className="pt-20 flex h-screen overflow-hidden">
         {/* Sidebar */}
-        <aside className="w-64 bg-white border-r border-slate-200 h-full overflow-y-auto">
+        <aside className="w-64 bg-white border-r border-slate-200 h-[calc(100vh-5rem)] overflow-y-auto">
           <nav className="p-4 space-y-1">
             {/* Home */}
             <a
@@ -216,24 +216,18 @@ const BuyerPage: React.FC = () => {
                   >
                     All Products
                   </Link>
-                  <a
-                    href="#"
-                    className="block px-3 py-2 rounded-lg text-sm text-slate-600 hover:bg-slate-100 hover:text-brand-600 transition-colors"
-                  >
-                    Search
-                  </a>
                   <Link
                     to="/buyer/ai-search"
                     className="block px-3 py-2 rounded-lg text-sm text-slate-600 hover:bg-slate-100 hover:text-brand-600 transition-colors"
                   >
                     AI Search
                   </Link>
-                  <a
-                    href="#"
+                  <Link
+                    to="/buyer/price-insights"
                     className="block px-3 py-2 rounded-lg text-sm text-slate-600 hover:bg-slate-100 hover:text-brand-600 transition-colors"
                   >
                     Price Insights
-                  </a>
+                  </Link>
                 </div>
               )}
             </div>
@@ -256,12 +250,12 @@ const BuyerPage: React.FC = () => {
               </button>
               {expandedMenus.has('orders') && (
                 <div className="ml-8 mt-1 space-y-1">
-                  <a
-                    href="#"
+                  <Link
+                    to="/buyer/orders"
                     className="block px-3 py-2 rounded-lg text-sm text-slate-600 hover:bg-slate-100 hover:text-brand-600 transition-colors"
                   >
                     All Orders
-                  </a>
+                  </Link>
                   <a
                     href="#"
                     className="block px-3 py-2 rounded-lg text-sm text-slate-600 hover:bg-slate-100 hover:text-brand-600 transition-colors"
@@ -401,7 +395,7 @@ const BuyerPage: React.FC = () => {
         {/* Main Content */}
         <div className="flex-1 bg-white h-full overflow-hidden flex flex-col">
           <div className="flex-1 overflow-y-auto min-h-0">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-12 pb-4">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-12 pb-12">
               <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                 <div>
                   <h1 className="text-3xl font-bold text-slate-900 mb-2">Buyer Portal</h1>
@@ -858,7 +852,7 @@ const BuyerPage: React.FC = () => {
               </div>
 
               {/* Statistics */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-0">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div className="bg-slate-50 rounded-xl p-6 border border-slate-200">
                   <div className="flex items-center gap-3 mb-2">
                     <TrendingUp className="text-brand-600" size={24} />

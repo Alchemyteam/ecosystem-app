@@ -1,5 +1,6 @@
 // 销售数据项类型
 export interface SalesData {
+  id?: number | string;                 // 数据库主键ID（推荐使用）
   TXDate: string | null;              // 交易日期 "2024-01-20"
   TXNo: string | null;                 // 交易编号
   TXQty: number | null;                // 交易数量

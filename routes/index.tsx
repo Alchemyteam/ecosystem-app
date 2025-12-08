@@ -8,6 +8,11 @@ import ProfilePage from '../pages/ProfilePage';
 import BuyerPage from '../pages/BuyerPage';
 import ProductsListPage from '../pages/ProductsListPage';
 import AISearchPage from '../pages/AISearchPage';
+import ProductDetailPage from '../pages/ProductDetailPage';
+import CartPage from '../pages/CartPage';
+import CheckoutPage from '../pages/CheckoutPage';
+import PriceInsightsPage from '../pages/PriceInsightsPage';
+import OrdersPage from '../pages/OrdersPage';
 import SellerPage from '../pages/SellerPage';
 import PEPage from '../pages/PEPage';
 import SalesDataManagementPage from '../pages/SalesDataManagementPage';
@@ -101,6 +106,54 @@ const AppRoutes: React.FC = () => {
         element={
           <ProtectedRoute>
             <AISearchPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/buyer/products/:productId"
+        element={
+          <ProtectedRoute>
+            <ProductDetailPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/buyer/cart"
+        element={
+          <ProtectedRoute>
+            <CartPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/buyer/checkout"
+        element={
+          <ProtectedRoute>
+            <CheckoutPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/buyer/price-insights"
+        element={
+          <ProtectedRoute>
+            <PriceInsightsPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/buyer/orders"
+        element={
+          <ProtectedRoute>
+            <OrdersPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/buyer/orders/:orderId"
+        element={
+          <ProtectedRoute>
+            <OrdersPage />
           </ProtectedRoute>
         }
       />

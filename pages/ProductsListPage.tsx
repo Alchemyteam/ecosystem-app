@@ -38,6 +38,7 @@ import {
   Calendar,
   Building2,
   Tag,
+  Eye,
 } from 'lucide-react';
 
 const ProductsListPage: React.FC = () => {
@@ -59,6 +60,7 @@ const ProductsListPage: React.FC = () => {
   const [categoryOptions, setCategoryOptions] = useState<Array<{ label: string; value: string }>>([
     { label: 'All Categories', value: 'all' },
   ]);
+  const [notification, setNotification] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
   
   // 筛选状态 - 根据 sales_data 表格结构
   const [filters, setFilters] = useState({
@@ -121,6 +123,27 @@ const ProductsListPage: React.FC = () => {
       category: product['Product Hierarchy 3'] || product.Sector || '',
     };
     navigate('/buyer/ai-search', { state: { product: buyerProduct } });
+  };
+
+  const handleAddToCart = async (product: SalesData) => {
+    // 使用 id（数据库主键）作为 productId
+    if (product.id === null || product.id === undefined || product.id === '') {
+      setNotification({ type: 'error', message: 'Product ID is missing. Cannot add to cart.' });
+      setTimeout(() => setNotification(null), 3000);
+      return;
+    }
+
+    try {
+      const productId = String(product.id);
+      await buyerApi.addToCart({ productId, quantity: 1 });
+      setNotification({ type: 'success', message: 'Product added to cart successfully!' });
+    } catch (error) {
+      const apiError = error as { message?: string } | Error;
+      const errorMessage = apiError instanceof Error ? apiError.message : (apiError as { message?: string })?.message || 'Failed to add product to cart.';
+      setNotification({ type: 'error', message: errorMessage });
+    } finally {
+      setTimeout(() => setNotification(null), 3000);
+    }
   };
 
   // 从数据中提取 Product Hierarchy 3 的不重复值
@@ -430,10 +453,27 @@ const ProductsListPage: React.FC = () => {
   return (
     <div className="min-h-screen bg-slate-50 font-sans text-slate-900">
       <Header />
+      {/* Notification */}
+      {notification && (
+        <div
+          className={`fixed top-20 left-1/2 transform -translate-x-1/2 z-50 px-6 py-3 rounded-lg shadow-lg flex items-center gap-2 ${
+            notification.type === 'success'
+              ? 'bg-green-50 border border-green-200 text-green-800'
+              : 'bg-red-50 border border-red-200 text-red-800'
+          }`}
+        >
+          {notification.type === 'success' ? (
+            <CheckCircle2 size={20} className="text-green-600" />
+          ) : (
+            <AlertCircle size={20} className="text-red-600" />
+          )}
+          <span className="font-medium">{notification.message}</span>
+        </div>
+      )}
       <main className="pt-20 flex h-screen overflow-hidden">
         {/* Sidebar */}
         <aside
-          className={`bg-white border-r border-slate-200 h-full transition-all duration-300 ${isSidebarOpen ? 'w-64' : 'w-0'
+          className={`bg-white border-r border-slate-200 h-[calc(100vh-5rem)] transition-all duration-300 ${isSidebarOpen ? 'w-64' : 'w-0'
             } ${isSidebarOpen ? 'overflow-y-auto' : 'overflow-hidden'}`}
         >
           <nav className={`p-4 space-y-1 transition-opacity duration-300 ${isSidebarOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
@@ -481,24 +521,18 @@ const ProductsListPage: React.FC = () => {
                   >
                     All Products
                   </Link>
-                  <a
-                    href="#"
-                    className="block px-3 py-2 rounded-lg text-sm text-slate-600 hover:bg-slate-100 hover:text-brand-600 transition-colors"
-                  >
-                    Search
-                  </a>
                   <Link
                     to="/buyer/ai-search"
                     className="block px-3 py-2 rounded-lg text-sm text-slate-600 hover:bg-slate-100 hover:text-brand-600 transition-colors"
                   >
                     AI Search
                   </Link>
-                  <a
-                    href="#"
+                  <Link
+                    to="/buyer/price-insights"
                     className="block px-3 py-2 rounded-lg text-sm text-slate-600 hover:bg-slate-100 hover:text-brand-600 transition-colors"
                   >
                     Price Insights
-                  </a>
+                  </Link>
                 </div>
               )}
             </div>
@@ -521,12 +555,12 @@ const ProductsListPage: React.FC = () => {
               </button>
               {expandedMenus.has('orders') && (
                 <div className="ml-8 mt-1 space-y-1">
-                  <a
-                    href="#"
+                  <Link
+                    to="/buyer/orders"
                     className="block px-3 py-2 rounded-lg text-sm text-slate-600 hover:bg-slate-100 hover:text-brand-600 transition-colors"
                   >
                     All Orders
-                  </a>
+                  </Link>
                   <a
                     href="#"
                     className="block px-3 py-2 rounded-lg text-sm text-slate-600 hover:bg-slate-100 hover:text-brand-600 transition-colors"
@@ -556,13 +590,13 @@ const ProductsListPage: React.FC = () => {
             </div>
 
             {/* Cart */}
-            <a
-              href="#"
+            <Link
+              to="/buyer/cart"
               className="flex items-center gap-3 px-3 py-2 rounded-lg text-slate-700 hover:bg-slate-100 hover:text-brand-600 transition-colors"
             >
               <ShoppingCart className="w-5 h-5" />
               <span className="font-medium">Cart</span>
-            </a>
+            </Link>
 
             {/* Favorites */}
             <div>
@@ -903,23 +937,52 @@ const ProductsListPage: React.FC = () => {
                               </div>
 
                               {/* Action Buttons */}
-                              <div className="flex gap-2">
-                                <button
-                                  onClick={() => handleAskAI(product)}
-                                  className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-lg font-medium hover:from-purple-700 hover:to-indigo-700 transition-all shadow-md hover:shadow-lg"
-                                >
-                                  <Sparkles size={18} />
-                                  Ask AI
-                                </button>
+                              <div className="flex flex-col gap-2">
+                                <div className="flex gap-2">
+                                  <button
+                                    onClick={() => handleAskAI(product)}
+                                    className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-lg font-medium hover:from-purple-700 hover:to-indigo-700 transition-all shadow-md hover:shadow-lg"
+                                  >
+                                    <Sparkles size={18} />
+                                    Ask AI
+                                  </button>
+                                  <button
+                                    onClick={() => handleAddToCart(product)}
+                                    className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-brand-600 text-white rounded-lg font-medium hover:bg-brand-700 transition-colors"
+                                  >
+                                    <ShoppingCart size={18} />
+                                    Add to Cart
+                                  </button>
+                                </div>
                                 <button
                                   onClick={() => {
-                                    // TODO: Add to cart functionality
-                                    console.log('Add to cart:', product.TXNo);
+                                    // 只使用 id（数据库主键）
+                                    // 使用更严格的检查，确保 id 不为 null/undefined/空字符串
+                                    // 注意：id 可以是 0，所以不能使用简单的 || 运算符
+                                    console.log('View Details clicked, product data:', { 
+                                      id: product.id, 
+                                      idType: typeof product.id,
+                                      hasId: 'id' in product,
+                                      fullProduct: product 
+                                    });
+                                    
+                                    if (product.id !== null && product.id !== undefined && product.id !== '') {
+                                      const productId = String(product.id);
+                                      console.log('Navigating to product detail with ID:', productId);
+                                      navigate(`/buyer/products/${productId}`);
+                                    } else {
+                                      console.warn('Cannot navigate: product.id is invalid', { 
+                                        id: product.id, 
+                                        idType: typeof product.id 
+                                      });
+                                    }
                                   }}
-                                  className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-brand-600 text-white rounded-lg font-medium hover:bg-brand-700 transition-colors"
+                                  className="w-full flex items-center justify-center gap-2 px-4 py-2.5 border-2 border-slate-300 text-slate-700 rounded-lg font-medium hover:bg-slate-50 hover:border-slate-400 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                  disabled={!product.id || product.id === null || product.id === undefined || product.id === ''}
+                                  title={!product.id || product.id === null || product.id === undefined || product.id === '' ? '产品ID不存在' : '查看产品详情'}
                                 >
-                                  <ShoppingCart size={18} />
-                                  Add to Cart
+                                  <Eye size={18} />
+                                  View Details
                                 </button>
                               </div>
                             </div>
@@ -1054,14 +1117,41 @@ const ProductsListPage: React.FC = () => {
                                         <Sparkles size={14} />
                                       </button>
                                       <button
-                                        onClick={() => {
-                                          // TODO: Add to cart functionality
-                                          console.log('Add to cart:', product.TXNo);
-                                        }}
+                                        onClick={() => handleAddToCart(product)}
                                         className="px-3 py-1.5 bg-brand-600 text-white rounded-lg text-xs font-medium hover:bg-brand-700 transition-colors flex items-center gap-1"
                                       >
                                         <ShoppingCart size={14} />
                                         Add
+                                      </button>
+                                      <button
+                                        onClick={() => {
+                                          // 只使用 id（数据库主键）
+                                          // 使用更严格的检查，确保 id 不为 null/undefined/空字符串
+                                          // 注意：id 可以是 0，所以不能使用简单的 || 运算符
+                                          console.log('View Details clicked, product data:', { 
+                                            id: product.id, 
+                                            idType: typeof product.id,
+                                            hasId: 'id' in product,
+                                            fullProduct: product 
+                                          });
+                                          
+                                          if (product.id !== null && product.id !== undefined && product.id !== '') {
+                                            const productId = String(product.id);
+                                            console.log('Navigating to product detail with ID:', productId);
+                                            navigate(`/buyer/products/${productId}`);
+                                          } else {
+                                            console.warn('Cannot navigate: product.id is invalid', { 
+                                              id: product.id, 
+                                              idType: typeof product.id 
+                                            });
+                                          }
+                                        }}
+                                        className="px-3 py-1.5 border border-slate-300 text-slate-700 rounded-lg text-xs font-medium hover:bg-slate-50 hover:border-slate-400 transition-colors flex items-center gap-1 disabled:opacity-50 disabled:cursor-not-allowed"
+                                        title={!product.id || product.id === null || product.id === undefined || product.id === '' ? '产品ID不存在' : '查看产品详情'}
+                                        disabled={!product.id || product.id === null || product.id === undefined || product.id === ''}
+                                      >
+                                        <Eye size={14} />
+                                        Details
                                       </button>
                                     </div>
                                   </td>

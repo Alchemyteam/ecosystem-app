@@ -97,12 +97,6 @@ const Header: React.FC = () => {
           >
             PE
           </Link>
-          <a 
-            href="#join"
-            className="bg-brand-600 hover:bg-brand-700 text-white px-5 py-2 rounded-full text-sm font-medium transition-all shadow-lg shadow-brand-500/30 hover:shadow-brand-500/50"
-          >
-            Get Early Access
-          </a>
           
           {/* User Info */}
           <div className="flex items-center gap-3 ml-2">
@@ -211,13 +205,6 @@ const Header: React.FC = () => {
           >
             PE
           </Link>
-          <a 
-            href="#join"
-            className="bg-brand-600 text-white px-4 py-3 rounded-lg text-center font-medium"
-            onClick={() => setIsMobileMenuOpen(false)}
-          >
-            Get Early Access
-          </a>
           
           {/* Mobile User Info */}
           <div className="border-t border-slate-200 pt-4 mt-2 flex flex-col gap-3">

@@ -101,6 +101,26 @@ export interface CartItem {
   subtotal: number;
 }
 
+export interface CartProduct {
+  id: string;
+  name: string;
+  price: number;
+  image?: string;
+}
+
+export interface CartItemWithProduct {
+  id: string;
+  product: CartProduct;
+  quantity: number;
+  subtotal: number;
+}
+
+export interface CartResponse {
+  items: CartItemWithProduct[];
+  total: number;
+  itemCount: number;
+}
+
 export interface AddToCartResponse {
   message: string;
   cartItem: CartItem;
@@ -381,10 +401,33 @@ export const buyerApi = {
     const query = buildQueryString({ limit });
     return apiRequest<FeaturedProductsResponse>(`/buyer/products/featured${query}`);
   },
+  getProductById: async (productId: string): Promise<BuyerProduct> => {
+    return apiRequest<BuyerProduct>(`/buyer/products/${productId}`);
+  },
+  getCart: async (): Promise<CartResponse> => {
+    return apiRequest<CartResponse>('/buyer/cart');
+  },
   addToCart: async ({ productId, quantity = 1 }: AddToCartRequest): Promise<AddToCartResponse> => {
     return apiRequest<AddToCartResponse>('/buyer/cart/add', {
       method: 'POST',
       body: JSON.stringify({ productId, quantity }),
+    });
+  },
+  removeFromCart: async (cartItemId: string): Promise<{ message: string }> => {
+    return apiRequest<{ message: string }>(`/buyer/cart/${cartItemId}`, {
+      method: 'DELETE',
+    });
+  },
+  updateCartItem: async (cartItemId: string, quantity: number): Promise<CartItemWithProduct> => {
+    return apiRequest<CartItemWithProduct>(`/buyer/cart/${cartItemId}`, {
+      method: 'PUT',
+      body: JSON.stringify({ quantity }),
+    });
+  },
+  createOrder: async (orderData: CreateOrderRequest): Promise<CreateOrderResponse> => {
+    return apiRequest<CreateOrderResponse>('/buyer/orders', {
+      method: 'POST',
+      body: JSON.stringify(orderData),
     });
   },
 };

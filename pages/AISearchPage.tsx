@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useLocation, Link } from 'react-router-dom';
+import { useLocation, Link, useNavigate } from 'react-router-dom';
 import Header from '../components/Header';
 
-import { BuyerProduct, ApiError } from '../services/api';
+import { BuyerProduct, ApiError, buyerApi } from '../services/api';
 import { TableData, ActionData } from '../types/chat';
 import { sendChatMessage } from '../services/chatApi';
 import { getToken } from '../services/api';
@@ -37,6 +37,7 @@ interface Message {
 
 const AISearchPage: React.FC = () => {
   const location = useLocation();
+  const navigate = useNavigate();
   const product = location.state?.product as BuyerProduct | undefined;
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputValue, setInputValue] = useState('');
@@ -47,6 +48,7 @@ const AISearchPage: React.FC = () => {
   const [showDebug, setShowDebug] = useState(false);
   const [lastResponse, setLastResponse] = useState<any>(null);
   const [showExamples, setShowExamples] = useState(false);
+  const [notification, setNotification] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   // 搜索示例
@@ -68,6 +70,26 @@ const AISearchPage: React.FC = () => {
       }
       return newSet;
     });
+  };
+
+  const handleAddToCart = async (productId: string) => {
+    // 验证 productId
+    if (!productId || productId.trim() === '') {
+      setNotification({ type: 'error', message: 'Product ID is missing. Cannot add to cart.' });
+      setTimeout(() => setNotification(null), 3000);
+      return;
+    }
+
+    try {
+      await buyerApi.addToCart({ productId: productId.trim(), quantity: 1 });
+      setNotification({ type: 'success', message: 'Product added to cart successfully!' });
+    } catch (error) {
+      const apiError = error as ApiError | Error;
+      const errorMessage = apiError instanceof Error ? apiError.message : (apiError as ApiError).message || 'Failed to add product to cart.';
+      setNotification({ type: 'error', message: errorMessage });
+    } finally {
+      setTimeout(() => setNotification(null), 3000);
+    }
   };
 
   // Scroll to bottom when messages change
@@ -174,6 +196,23 @@ const AISearchPage: React.FC = () => {
   return (
     <div className="min-h-screen bg-slate-50 font-sans text-slate-900">
       <Header />
+      {/* Notification */}
+      {notification && (
+        <div
+          className={`fixed top-20 left-1/2 transform -translate-x-1/2 z-50 px-6 py-3 rounded-lg shadow-lg flex items-center gap-2 ${
+            notification.type === 'success'
+              ? 'bg-green-50 border border-green-200 text-green-800'
+              : 'bg-red-50 border border-red-200 text-red-800'
+          }`}
+        >
+          {notification.type === 'success' ? (
+            <CheckCircle2 size={20} className="text-green-600" />
+          ) : (
+            <AlertCircle size={20} className="text-red-600" />
+          )}
+          <span className="font-medium">{notification.message}</span>
+        </div>
+      )}
       <main className="pt-20 flex h-screen overflow-hidden">
         {/* Sidebar */}
         <aside className="w-64 bg-white border-r border-slate-200 h-full overflow-y-auto">
@@ -211,24 +250,18 @@ const AISearchPage: React.FC = () => {
                   >
                     All Products
                   </Link>
-                  <a
-                    href="#"
-                    className="block px-3 py-2 rounded-lg text-sm text-slate-600 hover:bg-slate-100 hover:text-brand-600 transition-colors"
-                  >
-                    Search
-                  </a>
                   <Link
                     to="/buyer/ai-search"
                     className="block px-3 py-2 rounded-lg text-sm text-slate-600 hover:bg-slate-100 hover:text-brand-600 transition-colors bg-brand-50 text-brand-600"
                   >
                     AI Search
                   </Link>
-                  <a
-                    href="#"
+                  <Link
+                    to="/buyer/price-insights"
                     className="block px-3 py-2 rounded-lg text-sm text-slate-600 hover:bg-slate-100 hover:text-brand-600 transition-colors"
                   >
                     Price Insights
-                  </a>
+                  </Link>
                 </div>
               )}
             </div>
@@ -251,12 +284,12 @@ const AISearchPage: React.FC = () => {
               </button>
               {expandedMenus.has('orders') && (
                 <div className="ml-8 mt-1 space-y-1">
-                  <a
-                    href="#"
+                  <Link
+                    to="/buyer/orders"
                     className="block px-3 py-2 rounded-lg text-sm text-slate-600 hover:bg-slate-100 hover:text-brand-600 transition-colors"
                   >
                     All Orders
-                  </a>
+                  </Link>
                   <a
                     href="#"
                     className="block px-3 py-2 rounded-lg text-sm text-slate-600 hover:bg-slate-100 hover:text-brand-600 transition-colors"
@@ -286,13 +319,13 @@ const AISearchPage: React.FC = () => {
             </div>
 
             {/* Cart */}
-            <a
-              href="#"
+            <Link
+              to="/buyer/cart"
               className="flex items-center gap-3 px-3 py-2 rounded-lg text-slate-700 hover:bg-slate-100 hover:text-brand-600 transition-colors"
             >
               <ShoppingCart className="w-5 h-5" />
               <span className="font-medium">Cart</span>
-            </a>
+            </Link>
 
             {/* Favorites */}
             <div>
@@ -489,18 +522,76 @@ const AISearchPage: React.FC = () => {
                                   {header}
                                 </th>
                               ))}
+                              <th className="px-4 py-2 text-left font-semibold text-slate-700 border-b border-slate-200">
+                                Details
+                              </th>
+                              <th className="px-4 py-2 text-left font-semibold text-slate-700 border-b border-slate-200">
+                                Actions
+                              </th>
                             </tr>
                           </thead>
                           <tbody>
-                            {message.tableData.rows.map((row, rowIdx) => (
-                              <tr key={rowIdx} className="border-b border-slate-100 hover:bg-slate-50">
-                                {message.tableData!.headers.map((header, colIdx) => (
-                                  <td key={colIdx} className="px-4 py-2 text-slate-700">
-                                    {String(row[header] ?? '')}
+                            {message.tableData.rows.map((row, rowIdx) => {
+                              // 提取产品ID：只使用 id（数据库主键）
+                              const getProductId = (row: Record<string, any>): string | null => {
+                                // 只使用 id 字段（数据库主键）
+                                // 支持多种字段名变体：id, ID, Id
+                                const idFields = ['id', 'ID', 'Id'];
+                                for (const field of idFields) {
+                                  const value = row[field];
+                                  // 严格检查：id 不为 null/undefined/空字符串，包括数字 0
+                                  if (value !== null && value !== undefined && value !== '') {
+                                    // id 可以是数字或字符串，都接受（包括纯数字）
+                                    return String(value).trim();
+                                  }
+                                }
+                                
+                                // 如果没有找到 id 字段，返回 null
+                                return null;
+                              };
+                              
+                              const productId = getProductId(row);
+                              
+                              return (
+                                <tr key={rowIdx} className="border-b border-slate-100 hover:bg-slate-50">
+                                  {message.tableData!.headers.map((header, colIdx) => (
+                                    <td key={colIdx} className="px-4 py-2 text-slate-700">
+                                      {String(row[header] ?? '')}
+                                    </td>
+                                  ))}
+                                  <td className="px-4 py-2">
+                                    {productId ? (
+                                      <button
+                                        onClick={() => {
+                                          console.log('View Details clicked, navigating to product:', productId, 'from row:', row);
+                                          navigate(`/buyer/products/${productId}`);
+                                        }}
+                                        className="px-3 py-1.5 text-xs bg-brand-600 text-white rounded-lg hover:bg-brand-700 transition-colors font-medium"
+                                        title={`View details for product ID: ${productId}`}
+                                      >
+                                        View Details
+                                      </button>
+                                    ) : (
+                                      <span className="text-xs text-slate-400" title="Product ID not found in this row">-</span>
+                                    )}
                                   </td>
-                                ))}
-                              </tr>
-                            ))}
+                                  <td className="px-4 py-2">
+                                    {productId ? (
+                                      <button
+                                        onClick={() => handleAddToCart(productId)}
+                                        className="px-3 py-1.5 text-xs bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium flex items-center gap-1"
+                                        title={`Add product ${productId} to cart`}
+                                      >
+                                        <ShoppingCart size={14} />
+                                        Add to Cart
+                                      </button>
+                                    ) : (
+                                      <span className="text-xs text-slate-400" title="Product ID not found in this row">-</span>
+                                    )}
+                                  </td>
+                                </tr>
+                              );
+                            })}
                           </tbody>
                         </table>
                       </div>

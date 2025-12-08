@@ -198,7 +198,15 @@ export async function getSalesData(
     if (response.status === 400) {
       // 检查是否是数据库列名错误
       if (errorMessage.includes('buyer_code') || errorMessage.includes('Column') || errorMessage.includes('not found')) {
-        throw new Error(`后端数据库错误：${errorMessage}\n\n这通常是后端代码问题，请检查后端是否正确使用了数据库列名（应该是 BuyerCode 而不是 buyer_code）`);
+        let columnHint = '';
+        if (errorMessage.includes('id') && errorMessage.includes('not found')) {
+          columnHint = '\n\n问题：后端尝试查询 "id" 列，但数据库表中可能还没有这个列。\n解决方案：\n1. 如果数据库表中确实有 id 列，检查后端查询是否正确使用了列名\n2. 如果数据库表中没有 id 列，需要先添加该列，或者后端应该使用 TXNo 作为主键\n3. 检查后端 SQL 查询语句，确保列名与数据库表结构一致';
+        } else if (errorMessage.includes('buyer_code')) {
+          columnHint = '\n\n这通常是后端代码问题，请检查后端是否正确使用了数据库列名（应该是 BuyerCode 而不是 buyer_code）';
+        } else {
+          columnHint = '\n\n这通常是后端代码问题，请检查后端是否正确使用了数据库列名（注意大小写和特殊字符）';
+        }
+        throw new Error(`后端数据库错误：${errorMessage}${columnHint}`);
       }
       throw new Error(`请求参数错误：${errorMessage}`);
     }
