@@ -24,6 +24,9 @@ import {
   HelpCircle,
   AlertCircle,
   CheckCircle2,
+  Search,
+  Key,
+  X,
 } from 'lucide-react';
 
 interface Message {
@@ -49,15 +52,29 @@ const AISearchPage: React.FC = () => {
   const [lastResponse, setLastResponse] = useState<any>(null);
   const [showExamples, setShowExamples] = useState(false);
   const [notification, setNotification] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
+  const [searchMode, setSearchMode] = useState<'natural' | 'searchKey'>('natural');
+  const [searchKeys, setSearchKeys] = useState<Record<string, string>>({
+    Function: '',
+    ItemType: '',
+    Model: '',
+    PerformA: '',
+    PerformB: '',
+    Material: '',
+    Brand: '',
+    Bundled: '',
+    Origin: '',
+    OtherSAK: '',
+    UOM: '',
+    TPXP1: '',
+    TPXP2: '',
+  });
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   // 搜索示例
   const searchExamples = [
-    { category: 'By Item Code', examples: ['TI00040', 'Find item code TI00040', 'What is the price range of TI00040'] },
-    { category: 'By Item Name', examples: ['Spray Paint', 'LEAKAGE CURRENT CLAMP METER', 'Safety Helmet'] },
     { category: 'By Category', examples: ['Site Safety Equipment', 'Safety Equipment', 'Filters', 'Maintenance Chemicals'] },
     { category: 'By Brand', examples: ['Brand AET', 'Air Liquide Brand', 'Show all products from AET'] },
-    { category: 'Combined Search', examples: ['Site Safety Equipment + Air Liquide + Last Year', 'Filters + AET + Price 100-500'] },
+    { category: 'Multiple Keywords', examples: ['19P+5 micron+99 percent efficiency'], description: 'Use + to connect multiple keywords for combined search' },
   ];
 
   const toggleMenu = (menuKey: string) => {
@@ -121,11 +138,59 @@ const AISearchPage: React.FC = () => {
     }
   }, [product]);
 
+  // 构建 Search Key 搜索查询
+  const buildSearchKeyQuery = (): string => {
+    const conditions: string[] = [];
+    
+    // 字段映射：前端字段名 -> 数据库字段名
+    const fieldMapping: Record<string, string> = {
+      Function: 'Function',
+      ItemType: 'ItemType',
+      Model: 'Model',
+      PerformA: 'Performance',
+      PerformB: 'Performance.1',
+      Material: 'Material',
+      Brand: 'Brand Code',
+      Bundled: 'Bundled',
+      Origin: 'Origin',
+      OtherSAK: 'Other SAK',
+      UOM: 'UOM',
+      TPXP1: 'TXP1',
+      TPXP2: 'TXP2',
+    };
+
+    Object.entries(searchKeys).forEach(([frontendField, value]) => {
+      const stringValue = String(value || '');
+      if (stringValue.trim()) {
+        const dbField = fieldMapping[frontendField] || frontendField;
+        conditions.push(`${dbField}="${stringValue.trim()}"`);
+      }
+    });
+
+    if (conditions.length === 0) {
+      return '';
+    }
+
+    return `Search products where ${conditions.join(' AND ')}`;
+  };
+
   const handleSend = async (e?: React.FormEvent, messageText?: string) => {
     if (e) {
       e.preventDefault();
     }
-    const messageToSend = messageText || inputValue;
+    
+    let messageToSend: string;
+    
+    if (searchMode === 'searchKey') {
+      messageToSend = buildSearchKeyQuery();
+      if (!messageToSend) {
+        setError('Please enter at least one search key value');
+        return;
+      }
+    } else {
+      messageToSend = messageText || inputValue;
+    }
+    
     if (!messageToSend.trim() || isLoading) return;
 
     const userMessage: Message = {
@@ -639,8 +704,97 @@ const AISearchPage: React.FC = () => {
 
           {/* Input Area - Fixed at bottom */}
           <div className="sticky bottom-0 bg-white border-t border-slate-200 px-6 py-4 z-10 shadow-lg">
+            {/* Search Mode Toggle */}
+            <div className="mb-4 flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => {
+                  setSearchMode('natural');
+                  setShowExamples(false);
+                }}
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-2 ${
+                  searchMode === 'natural'
+                    ? 'bg-brand-600 text-white'
+                    : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+                }`}
+              >
+                <Search size={16} />
+                Natural Language
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setSearchMode('searchKey');
+                  setShowExamples(false);
+                }}
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-2 ${
+                  searchMode === 'searchKey'
+                    ? 'bg-brand-600 text-white'
+                    : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+                }`}
+              >
+                <Key size={16} />
+                Search by Search Key
+              </button>
+            </div>
+
+            {/* Search Key Form */}
+            {searchMode === 'searchKey' && (
+              <div className="mb-4 p-4 bg-slate-50 border border-slate-200 rounded-xl max-h-96 overflow-y-auto">
+                <div className="flex items-center justify-between mb-3">
+                  <h3 className="text-sm font-semibold text-slate-900">Search Keys</h3>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSearchKeys({
+                        Function: '',
+                        ItemType: '',
+                        Model: '',
+                        PerformA: '',
+                        PerformB: '',
+                        Material: '',
+                        Brand: '',
+                        Bundled: '',
+                        Origin: '',
+                        OtherSAK: '',
+                        UOM: '',
+                        TPXP1: '',
+                        TPXP2: '',
+                      });
+                    }}
+                    className="text-xs text-slate-500 hover:text-slate-700 flex items-center gap-1"
+                  >
+                    <X size={14} />
+                    Clear All
+                  </button>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                  {Object.entries(searchKeys).map(([key, value]) => (
+                    <div key={key}>
+                      <label className="block text-xs font-medium text-slate-700 mb-1">
+                        {key}
+                      </label>
+                      <input
+                        type="text"
+                        value={value}
+                        onChange={(e) => {
+                          setSearchKeys((prev) => ({
+                            ...prev,
+                            [key]: e.target.value,
+                          }));
+                        }}
+                        placeholder={`Enter ${key}`}
+                        className="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-brand-600 focus:border-transparent"
+                        disabled={isLoading}
+                      />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
             {/* Search Examples */}
-            {showExamples && (
+            {showExamples && searchMode === 'natural' && (
               <div className="mb-4 p-4 bg-slate-50 border border-slate-200 rounded-xl">
                 <div className="flex items-center justify-between mb-3">
                   <h3 className="text-sm font-semibold text-slate-900">Search Examples</h3>
@@ -654,7 +808,12 @@ const AISearchPage: React.FC = () => {
                 <div className="space-y-3 max-h-64 overflow-y-auto">
                   {searchExamples.map((category, idx) => (
                     <div key={idx}>
-                      <p className="text-xs font-medium text-slate-600 mb-1.5">{category.category}</p>
+                      <div className="flex items-center gap-2 mb-1.5">
+                        <p className="text-xs font-medium text-slate-600">{category.category}</p>
+                        {(category as any).description && (
+                          <span className="text-xs text-slate-500">({(category as any).description})</span>
+                        )}
+                      </div>
                       <div className="flex flex-wrap gap-2">
                         {category.examples.map((example, exampleIdx) => (
                           <button
@@ -679,54 +838,81 @@ const AISearchPage: React.FC = () => {
                 <p className="text-sm text-red-700">{error}</p>
               </div>
             )}
-            <form onSubmit={handleSend} className="flex gap-3">
-              <div className="flex-1 relative">
-                <input
-                  type="text"
-                  value={inputValue}
-                  onChange={(e) => {
-                    setInputValue(e.target.value);
-                    setError(null);
-                  }}
-                  onFocus={() => {
-                    if (messages.length <= 1) {
-                      setShowExamples(true);
-                    }
-                  }}
-                  placeholder="Enter search query, e.g., TI00040 or Safety Shoes or Site Safety Equipment + Air Liquide + Last Year"
-                  className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none"
-                  disabled={isLoading}
-                />
-                {!showExamples && (
-                  <button
-                    type="button"
-                    onClick={() => setShowExamples(true)}
-                    className="absolute right-2 top-1/2 -translate-y-1/2 px-2 py-1 text-xs text-slate-500 hover:text-slate-700"
-                  >
-                    View Examples
-                  </button>
-                )}
-              </div>
-              <button
-                type="submit"
-                disabled={!inputValue.trim() || isLoading}
-                className="px-6 py-3 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-xl font-medium hover:from-purple-700 hover:to-indigo-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 shadow-md hover:shadow-lg"
-              >
-                {isLoading ? (
-                  <>
-                    <Loader2 className="animate-spin" size={18} />
-                    Searching
-                  </>
-                ) : (
-                  <>
-                    <Send size={18} />
-                    Send
-                  </>
-                )}
-              </button>
-            </form>
+            {searchMode === 'natural' ? (
+              <form onSubmit={handleSend} className="flex gap-3">
+                <div className="flex-1 relative">
+                  <input
+                    type="text"
+                    value={inputValue}
+                    onChange={(e) => {
+                      setInputValue(e.target.value);
+                      setError(null);
+                    }}
+                    onFocus={() => {
+                      if (messages.length <= 1) {
+                        setShowExamples(true);
+                      }
+                    }}
+                    placeholder="Enter search query, e.g., TI00040 or Safety Shoes or Site Safety Equipment + Air Liquide + Last Year"
+                    className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none"
+                    disabled={isLoading}
+                  />
+                  {!showExamples && (
+                    <button
+                      type="button"
+                      onClick={() => setShowExamples(true)}
+                      className="absolute right-2 top-1/2 -translate-y-1/2 px-2 py-1 text-xs text-slate-500 hover:text-slate-700"
+                    >
+                      View Examples
+                    </button>
+                  )}
+                </div>
+                <button
+                  type="submit"
+                  disabled={!inputValue.trim() || isLoading}
+                  className="px-6 py-3 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-xl font-medium hover:from-purple-700 hover:to-indigo-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 shadow-md hover:shadow-lg"
+                >
+                  {isLoading ? (
+                    <>
+                      <Loader2 className="animate-spin" size={18} />
+                      Searching
+                    </>
+                  ) : (
+                    <>
+                      <Send size={18} />
+                      Send
+                    </>
+                  )}
+                </button>
+              </form>
+            ) : (
+              <form onSubmit={handleSend} className="flex gap-3">
+                <div className="flex-1" />
+                <button
+                  type="submit"
+                  disabled={isLoading || Object.values(searchKeys).every((v) => !String(v || '').trim())}
+                  className="px-6 py-3 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-xl font-medium hover:from-purple-700 hover:to-indigo-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 shadow-md hover:shadow-lg"
+                >
+                  {isLoading ? (
+                    <>
+                      <Loader2 className="animate-spin" size={18} />
+                      Searching
+                    </>
+                  ) : (
+                    <>
+                      <Search size={18} />
+                      Search
+                    </>
+                  )}
+                </button>
+              </form>
+            )}
             <div className="mt-2 text-xs text-slate-500">
-              💡 Hint: Supports search by item code, name, category, brand, and combined conditions
+              {searchMode === 'natural' ? (
+                <>💡 Hint: Supports search by item code, name, category, brand, and combined conditions. Use + to connect multiple keywords (e.g., 19P+5 micron+99 percent efficiency)</>
+              ) : (
+                <>💡 Hint: Enter values in the search key fields above to filter products by specific attributes</>
+              )}
             </div>
           </div>
         </div>
