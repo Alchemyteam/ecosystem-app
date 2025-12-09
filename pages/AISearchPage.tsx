@@ -36,6 +36,7 @@ interface Message {
   timestamp: Date;
   tableData?: TableData;
   actionData?: ActionData;
+  isErrorResponse?: boolean;
 }
 
 const AISearchPage: React.FC = () => {
@@ -51,6 +52,7 @@ const AISearchPage: React.FC = () => {
   const [showDebug, setShowDebug] = useState(false);
   const [lastResponse, setLastResponse] = useState<any>(null);
   const [showExamples, setShowExamples] = useState(false);
+  const [userHiddenExamples, setUserHiddenExamples] = useState(false);
   const [notification, setNotification] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
   const [searchMode, setSearchMode] = useState<'natural' | 'searchKey'>('natural');
   const [searchKeys, setSearchKeys] = useState<Record<string, string>>({
@@ -205,6 +207,7 @@ const AISearchPage: React.FC = () => {
     setError(null);
     setIsLoading(true);
     setShowExamples(false);
+    setUserHiddenExamples(false);
 
     try {
       const token = getToken();
@@ -227,6 +230,12 @@ const AISearchPage: React.FC = () => {
         setConversationId(response.conversationId);
       }
 
+      // Check if this is an error response
+      const isErrorResponse = 
+        response.response?.toLowerCase().includes('sorry, i encountered an error') &&
+        !response.tableData &&
+        !response.actionData;
+
       const assistantMessage: Message = {
         id: (Date.now() + 1).toString(),
         role: 'assistant',
@@ -234,6 +243,7 @@ const AISearchPage: React.FC = () => {
         timestamp: new Date(),
         tableData: response.tableData,
         actionData: response.actionData,
+        isErrorResponse: isErrorResponse,
       };
 
       setMessages((prev) => [...prev, assistantMessage]);
@@ -427,13 +437,13 @@ const AISearchPage: React.FC = () => {
             </div>
 
             {/* Messages */}
-            <a
-              href="#"
+            <Link
+              to="/buyer/messages"
               className="flex items-center gap-3 px-3 py-2 rounded-lg text-slate-700 hover:bg-slate-100 hover:text-brand-600 transition-colors"
             >
               <MessageSquare className="w-5 h-5" />
               <span className="font-medium">Messages</span>
-            </a>
+            </Link>
 
             {/* Account */}
             <div>
@@ -678,6 +688,24 @@ const AISearchPage: React.FC = () => {
                     </div>
                   )}
 
+                  {/* Error Response - Chatbox Redirect */}
+                  {message.isErrorResponse && (
+                    <div className="mt-4 p-4 bg-slate-50 border border-slate-200 rounded-lg">
+                      <div className="flex items-center justify-between">
+                        <p className="text-sm text-slate-700">
+                          Still can't find what you're looking for? Jump to chatbox
+                        </p>
+                        <button
+                          onClick={() => navigate('/buyer/messages')}
+                          className="px-4 py-2 bg-brand-600 text-white rounded-lg hover:bg-brand-700 transition-colors text-sm font-medium flex items-center gap-2"
+                        >
+                          <MessageSquare size={16} />
+                          Go to Chatbox
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
                   <p className={`text-xs mt-2 ${message.role === 'user' ? 'text-brand-100' : 'text-slate-400'}`}>
                     {message.timestamp.toLocaleTimeString()}
                   </p>
@@ -711,6 +739,7 @@ const AISearchPage: React.FC = () => {
                 onClick={() => {
                   setSearchMode('natural');
                   setShowExamples(false);
+                  setUserHiddenExamples(false);
                 }}
                 className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-2 ${
                   searchMode === 'natural'
@@ -726,6 +755,7 @@ const AISearchPage: React.FC = () => {
                 onClick={() => {
                   setSearchMode('searchKey');
                   setShowExamples(false);
+                  setUserHiddenExamples(false);
                 }}
                 className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-2 ${
                   searchMode === 'searchKey'
@@ -799,7 +829,10 @@ const AISearchPage: React.FC = () => {
                 <div className="flex items-center justify-between mb-3">
                   <h3 className="text-sm font-semibold text-slate-900">Search Examples</h3>
                   <button
-                    onClick={() => setShowExamples(false)}
+                    onClick={() => {
+                      setShowExamples(false);
+                      setUserHiddenExamples(true);
+                    }}
                     className="text-xs text-slate-500 hover:text-slate-700"
                   >
                     Hide
@@ -849,7 +882,7 @@ const AISearchPage: React.FC = () => {
                       setError(null);
                     }}
                     onFocus={() => {
-                      if (messages.length <= 1) {
+                      if (messages.length <= 1 && !userHiddenExamples) {
                         setShowExamples(true);
                       }
                     }}
@@ -860,7 +893,10 @@ const AISearchPage: React.FC = () => {
                   {!showExamples && (
                     <button
                       type="button"
-                      onClick={() => setShowExamples(true)}
+                      onClick={() => {
+                        setShowExamples(true);
+                        setUserHiddenExamples(false);
+                      }}
                       className="absolute right-2 top-1/2 -translate-y-1/2 px-2 py-1 text-xs text-slate-500 hover:text-slate-700"
                     >
                       View Examples

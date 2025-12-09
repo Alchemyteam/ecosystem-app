@@ -8,6 +8,7 @@ import ProfilePage from '../pages/ProfilePage';
 import BuyerPage from '../pages/BuyerPage';
 import ProductsListPage from '../pages/ProductsListPage';
 import AISearchPage from '../pages/AISearchPage';
+import ChatboxPage from '../pages/ChatboxPage';
 import ProductDetailPage from '../pages/ProductDetailPage';
 import CartPage from '../pages/CartPage';
 import CheckoutPage from '../pages/CheckoutPage';
@@ -106,6 +107,14 @@ const AppRoutes: React.FC = () => {
         element={
           <ProtectedRoute>
             <AISearchPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/buyer/messages"
+        element={
+          <ProtectedRoute>
+            <ChatboxPage />
           </ProtectedRoute>
         }
       />
