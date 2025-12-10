@@ -390,6 +390,12 @@ const OrdersPage: React.FC = () => {
                   >
                     All Orders
                   </Link>
+                  <Link
+                    to="/buyer/tracking"
+                    className="block px-3 py-2 rounded-lg text-sm text-slate-600 hover:bg-slate-100 hover:text-brand-600 transition-colors"
+                  >
+                    Shipment Tracking
+                  </Link>
                   <a
                     href="#"
                     className="block px-3 py-2 rounded-lg text-sm text-slate-600 hover:bg-slate-100 hover:text-brand-600 transition-colors"
@@ -620,11 +626,13 @@ const OrdersPage: React.FC = () => {
                         Last updated: {formatDateTime(order.updatedAt)}
                       </div>
                       <div className="flex items-center gap-2">
-                        {order.trackingNumber && order.status !== 'delivered' && order.status !== 'cancelled' && (
-                          <button className="px-4 py-2 text-sm border border-slate-300 text-slate-700 rounded-lg hover:bg-slate-50 transition-colors">
-                            Track Order
-                          </button>
-                        )}
+                        <button
+                          onClick={() => navigate(`/buyer/tracking/${order.id}`)}
+                          className="px-4 py-2 text-sm border border-slate-300 text-slate-700 rounded-lg hover:bg-slate-50 transition-colors flex items-center gap-2"
+                        >
+                          <Truck size={16} />
+                          Track Shipment
+                        </button>
                         <button
                           onClick={() => navigate(`/buyer/orders/${order.id}`)}
                           className="px-4 py-2 text-sm bg-brand-600 text-white rounded-lg hover:bg-brand-700 transition-colors flex items-center gap-2"

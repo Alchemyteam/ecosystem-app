@@ -842,10 +842,12 @@ const ProductsListPage: React.FC = () => {
                             className="bg-white rounded-xl border border-slate-200 overflow-hidden hover:shadow-lg transition-all duration-200"
                           >
                             {/* Product Image */}
-                            <div className="relative h-48 bg-slate-100">
-                              <div className="w-full h-full flex items-center justify-center">
-                                <Package className="text-slate-400" size={48} />
-                              </div>
+                            <div className="relative h-48 bg-slate-100 overflow-hidden">
+                              <img
+                                src="/img/COLOURBOX26670563.webp"
+                                alt={product.ItemName || 'Product image'}
+                                className="w-full h-full object-cover"
+                              />
                               {product['Product Hierarchy 3'] && (
                                 <div className="absolute top-3 left-3">
                                   <span className="px-2 py-1 rounded-lg text-xs font-medium bg-white/90 text-slate-700 backdrop-blur-sm">
@@ -1039,8 +1041,12 @@ const ProductsListPage: React.FC = () => {
                                 <tr key={uniqueKey} className="hover:bg-slate-50 transition-colors">
                                   <td className="px-6 py-4">
                                     <div className="flex items-center gap-3">
-                                      <div className="w-12 h-12 rounded-lg bg-slate-100 flex items-center justify-center">
-                                        <Package className="text-slate-400" size={20} />
+                                      <div className="w-12 h-12 rounded-lg bg-slate-100 overflow-hidden flex-shrink-0">
+                                        <img
+                                          src="/img/COLOURBOX26670563.webp"
+                                          alt={product.ItemName || 'Product image'}
+                                          className="w-full h-full object-cover"
+                                        />
                                       </div>
                                       <div>
                                         <div className="font-medium text-slate-900">{product.ItemName || 'N/A'}</div>

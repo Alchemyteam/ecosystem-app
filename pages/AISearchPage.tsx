@@ -133,7 +133,7 @@ const AISearchPage: React.FC = () => {
         {
           id: '1',
           role: 'assistant',
-          content: 'Hello! I am your AI Material Search Assistant. I can help you with:\n\n🔍 **Search Materials** - By code, name, category, brand, etc.\n📊 **View Historical Data** - Price trends, transaction records\n💡 **Smart Recommendations** - Find suitable products based on your needs\n\nTry entering an item code (e.g., TI00040) or name (e.g., Safety Shoes) to start searching!',
+          content: 'Hello! I am your AI Material Search Assistant. I can help you with:\n\n🔍 **Search Materials** - By code, name, category, brand, etc.\n📊 **View Historical Data** - Price trends, transaction records\n💡 **Smart Recommendations** - Find suitable products based on your needs\n\nTry entering any search key to start searching!',
           timestamp: new Date(),
         },
       ]);
@@ -364,6 +364,12 @@ const AISearchPage: React.FC = () => {
                     className="block px-3 py-2 rounded-lg text-sm text-slate-600 hover:bg-slate-100 hover:text-brand-600 transition-colors"
                   >
                     All Orders
+                  </Link>
+                  <Link
+                    to="/buyer/tracking"
+                    className="block px-3 py-2 rounded-lg text-sm text-slate-600 hover:bg-slate-100 hover:text-brand-600 transition-colors"
+                  >
+                    Shipment Tracking
                   </Link>
                   <a
                     href="#"

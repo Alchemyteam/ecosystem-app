@@ -14,6 +14,7 @@ import CartPage from '../pages/CartPage';
 import CheckoutPage from '../pages/CheckoutPage';
 import PriceInsightsPage from '../pages/PriceInsightsPage';
 import OrdersPage from '../pages/OrdersPage';
+import TrackingPage from '../pages/TrackingPage';
 import SellerPage from '../pages/SellerPage';
 import PEPage from '../pages/PEPage';
 import SalesDataManagementPage from '../pages/SalesDataManagementPage';
@@ -163,6 +164,22 @@ const AppRoutes: React.FC = () => {
         element={
           <ProtectedRoute>
             <OrdersPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/buyer/tracking"
+        element={
+          <ProtectedRoute>
+            <TrackingPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/buyer/tracking/:orderId"
+        element={
+          <ProtectedRoute>
+            <TrackingPage />
           </ProtectedRoute>
         }
       />
