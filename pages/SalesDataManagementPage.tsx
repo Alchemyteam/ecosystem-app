@@ -314,31 +314,82 @@ const SalesDataManagementPage: React.FC = () => {
               {/* Table */}
               <div className="bg-white rounded-xl border border-slate-200 overflow-hidden mb-6">
                 <div className="overflow-x-auto">
-                  <table className="w-full">
+                  <table className="w-full min-w-max">
                     <thead className="bg-slate-50 border-b border-slate-200">
                       <tr>
-                        <th className="px-6 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">
+                        <th className="px-4 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider whitespace-nowrap">
                           Transaction Date
                         </th>
-                        <th className="px-6 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">
+                        <th className="px-4 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider whitespace-nowrap">
                           Transaction No
                         </th>
-                        <th className="px-6 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">
-                          Product Name
-                        </th>
-                        <th className="px-6 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">
-                          Product Code
-                        </th>
-                        <th className="px-6 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">
-                          Buyer
-                        </th>
-                        <th className="px-6 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">
+                        <th className="px-4 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider whitespace-nowrap">
                           Quantity
                         </th>
-                        <th className="px-6 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">
+                        <th className="px-4 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider whitespace-nowrap">
                           Price
                         </th>
-                        <th className="px-6 py-3 text-right text-xs font-semibold text-slate-600 uppercase tracking-wider">
+                        <th className="px-4 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider whitespace-nowrap">
+                          Buyer Code
+                        </th>
+                        <th className="px-4 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider whitespace-nowrap">
+                          Buyer Name
+                        </th>
+                        <th className="px-4 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider whitespace-nowrap">
+                          Item Code
+                        </th>
+                        <th className="px-4 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider whitespace-nowrap">
+                          Item Name
+                        </th>
+                        <th className="px-4 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider whitespace-nowrap">
+                          Product Hierarchy 3
+                        </th>
+                        <th className="px-4 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider whitespace-nowrap">
+                          Item Type
+                        </th>
+                        <th className="px-4 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider whitespace-nowrap">
+                          Model
+                        </th>
+                        <th className="px-4 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider whitespace-nowrap">
+                          Material
+                        </th>
+                        <th className="px-4 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider whitespace-nowrap">
+                          UOM
+                        </th>
+                        <th className="px-4 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider whitespace-nowrap">
+                          Brand Code
+                        </th>
+                        <th className="px-4 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider whitespace-nowrap">
+                          Unit Cost
+                        </th>
+                        <th className="px-4 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider whitespace-nowrap">
+                          Sector
+                        </th>
+                        <th className="px-4 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider whitespace-nowrap">
+                          Sub Sector
+                        </th>
+                        <th className="px-4 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider whitespace-nowrap">
+                          Value
+                        </th>
+                        <th className="px-4 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider whitespace-nowrap">
+                          Function
+                        </th>
+                        <th className="px-4 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider whitespace-nowrap">
+                          Performance
+                        </th>
+                        <th className="px-4 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider whitespace-nowrap">
+                          Performance.1
+                        </th>
+                        <th className="px-4 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider whitespace-nowrap">
+                          Rationale
+                        </th>
+                        <th className="px-4 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider whitespace-nowrap">
+                          Website
+                        </th>
+                        <th className="px-4 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider whitespace-nowrap">
+                          Source
+                        </th>
+                        <th className="px-4 py-3 text-right text-xs font-semibold text-slate-600 uppercase tracking-wider whitespace-nowrap sticky right-0 bg-slate-50">
                           Actions
                         </th>
                       </tr>
@@ -346,38 +397,95 @@ const SalesDataManagementPage: React.FC = () => {
                     <tbody className="bg-white divide-y divide-slate-200">
                       {salesData.length === 0 ? (
                         <tr>
-                          <td colSpan={8} className="px-6 py-12 text-center text-slate-500">
+                          <td colSpan={25} className="px-6 py-12 text-center text-slate-500">
                             No data available
                           </td>
                         </tr>
                       ) : (
                         salesData.map((item, index) => (
                           <tr key={`${item.TXNo}-${index}`} className="hover:bg-slate-50 transition-colors">
-                            <td className="px-6 py-4 text-sm text-slate-600">
+                            <td className="px-4 py-4 text-sm text-slate-600 whitespace-nowrap">
                               {formatDate(item.TXDate)}
                             </td>
-                            <td className="px-6 py-4 text-sm font-medium text-slate-900">
+                            <td className="px-4 py-4 text-sm font-medium text-slate-900 whitespace-nowrap">
                               {item.TXNo || 'N/A'}
                             </td>
-                            <td className="px-6 py-4 text-sm text-slate-900">
-                              {item.ItemName || 'N/A'}
+                            <td className="px-4 py-4 text-sm text-slate-600 whitespace-nowrap">
+                              {item.TXQty !== null && item.TXQty !== undefined ? item.TXQty : 'N/A'}
                             </td>
-                            <td className="px-6 py-4 text-sm text-slate-600">
-                              {item.ItemCode || 'N/A'}
-                            </td>
-                            <td className="px-6 py-4 text-sm text-slate-600">
-                              {item.BuyerName || 'N/A'}
-                              {item.BuyerCode && (
-                                <span className="text-xs text-slate-500 ml-1">({item.BuyerCode})</span>
-                              )}
-                            </td>
-                            <td className="px-6 py-4 text-sm text-slate-600">
-                              {item.TXQty || 'N/A'}
-                            </td>
-                            <td className="px-6 py-4 text-sm font-semibold text-slate-900">
+                            <td className="px-4 py-4 text-sm font-semibold text-slate-900 whitespace-nowrap">
                               {formatPrice(item.TXP1)}
                             </td>
-                            <td className="px-6 py-4 text-right">
+                            <td className="px-4 py-4 text-sm text-slate-600 whitespace-nowrap">
+                              {item.BuyerCode || 'N/A'}
+                            </td>
+                            <td className="px-4 py-4 text-sm text-slate-600 whitespace-nowrap">
+                              {item.BuyerName || 'N/A'}
+                            </td>
+                            <td className="px-4 py-4 text-sm text-slate-600 whitespace-nowrap">
+                              {item.ItemCode || 'N/A'}
+                            </td>
+                            <td className="px-4 py-4 text-sm text-slate-900 whitespace-nowrap">
+                              {item.ItemName || 'N/A'}
+                            </td>
+                            <td className="px-4 py-4 text-sm text-slate-600 whitespace-nowrap">
+                              {item['Product Hierarchy 3'] || 'N/A'}
+                            </td>
+                            <td className="px-4 py-4 text-sm text-slate-600 whitespace-nowrap">
+                              {item.ItemType || 'N/A'}
+                            </td>
+                            <td className="px-4 py-4 text-sm text-slate-600 whitespace-nowrap">
+                              {item.Model || 'N/A'}
+                            </td>
+                            <td className="px-4 py-4 text-sm text-slate-600 whitespace-nowrap">
+                              {item.Material || 'N/A'}
+                            </td>
+                            <td className="px-4 py-4 text-sm text-slate-600 whitespace-nowrap">
+                              {item.UOM || 'N/A'}
+                            </td>
+                            <td className="px-4 py-4 text-sm text-slate-600 whitespace-nowrap">
+                              {item['Brand Code'] || 'N/A'}
+                            </td>
+                            <td className="px-4 py-4 text-sm text-slate-600 whitespace-nowrap">
+                              {formatPrice(item['Unit Cost'])}
+                            </td>
+                            <td className="px-4 py-4 text-sm text-slate-600 whitespace-nowrap">
+                              {item.Sector || 'N/A'}
+                            </td>
+                            <td className="px-4 py-4 text-sm text-slate-600 whitespace-nowrap">
+                              {item.SubSector || 'N/A'}
+                            </td>
+                            <td className="px-4 py-4 text-sm font-semibold text-slate-900 whitespace-nowrap">
+                              {formatPrice(item.Value)}
+                            </td>
+                            <td className="px-4 py-4 text-sm text-slate-600 whitespace-nowrap">
+                              {item.Function || 'N/A'}
+                            </td>
+                            <td className="px-4 py-4 text-sm text-slate-600 whitespace-nowrap">
+                              {item.Performance || 'N/A'}
+                            </td>
+                            <td className="px-4 py-4 text-sm text-slate-600 whitespace-nowrap">
+                              {item['Performance.1'] || 'N/A'}
+                            </td>
+                            <td className="px-4 py-4 text-sm text-slate-600 whitespace-nowrap max-w-xs truncate">
+                              {item.Rationale || 'N/A'}
+                            </td>
+                            <td className="px-4 py-4 text-sm text-slate-600 whitespace-nowrap">
+                              {item.www ? (
+                                <a 
+                                  href={item.www} 
+                                  target="_blank" 
+                                  rel="noopener noreferrer"
+                                  className="text-brand-600 hover:underline truncate block max-w-xs"
+                                >
+                                  {item.www}
+                                </a>
+                              ) : 'N/A'}
+                            </td>
+                            <td className="px-4 py-4 text-sm text-slate-600 whitespace-nowrap">
+                              {item.Source || 'N/A'}
+                            </td>
+                            <td className="px-4 py-4 text-right sticky right-0 bg-white whitespace-nowrap">
                               <div className="flex items-center justify-end gap-2">
                                 <button
                                   onClick={() => handleEdit(item)}
