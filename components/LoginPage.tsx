@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { LogIn, UserPlus, Mail, Lock, User } from 'lucide-react';
+import { LogIn, UserPlus, Mail, Lock, User, Building2 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 
 const LoginPage: React.FC = () => {
@@ -11,7 +11,8 @@ const LoginPage: React.FC = () => {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const { login, register } = useAuth();
+  const [isBCLoading, setIsBCLoading] = useState(false);
+  const { login, register, loginWithBC } = useAuth();
   const navigate = useNavigate();
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -167,7 +168,7 @@ const LoginPage: React.FC = () => {
 
               <button
                 type="submit"
-                disabled={isLoading}
+                disabled={isLoading || isBCLoading}
                 className="w-full bg-brand-600 hover:bg-brand-700 text-white font-medium py-3 rounded-lg transition-all shadow-lg shadow-brand-500/30 hover:shadow-brand-500/50 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
               >
                 {isLoading ? (
@@ -179,6 +180,46 @@ const LoginPage: React.FC = () => {
                   <>
                     <LogIn size={18} />
                     Login
+                  </>
+                )}
+              </button>
+
+              {/* SSO Divider */}
+              <div className="relative my-6">
+                <div className="absolute inset-0 flex items-center">
+                  <div className="w-full border-t border-slate-300"></div>
+                </div>
+                <div className="relative flex justify-center text-sm">
+                  <span className="px-2 bg-white text-slate-500">Or continue with</span>
+                </div>
+              </div>
+
+              {/* Business Central SSO Button */}
+              <button
+                type="button"
+                onClick={async () => {
+                  setError('');
+                  setIsBCLoading(true);
+                  try {
+                    await loginWithBC();
+                    // 注意：loginWithBC 会重定向，所以这里不会继续执行
+                  } catch (err) {
+                    setError('Failed to initiate Business Central login. Please try again.');
+                    setIsBCLoading(false);
+                  }
+                }}
+                disabled={isLoading || isBCLoading}
+                className="w-full bg-white hover:bg-slate-50 text-slate-700 font-medium py-3 rounded-lg transition-all border-2 border-slate-300 hover:border-slate-400 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              >
+                {isBCLoading ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-slate-600 border-t-transparent rounded-full animate-spin"></div>
+                    Connecting...
+                  </>
+                ) : (
+                  <>
+                    <Building2 size={18} />
+                    Login with Business Central
                   </>
                 )}
               </button>

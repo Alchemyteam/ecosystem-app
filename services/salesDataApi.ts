@@ -136,26 +136,27 @@ export async function getSalesData(
     throw new Error('未授权：请先登录');
   }
   
-  console.log('=== API Request ===');
-  console.log('URL:', url);
-  console.log('Params:', { 
-    page, 
-    limit, 
-    sort: normalizedSort, 
-    category, 
-    keyword,
-    minPrice: params.minPrice,
-    maxPrice: params.maxPrice,
-    minDate: params.minDate,
-    maxDate: params.maxDate,
-    buyerName: params.buyerName,
-    itemType: params.itemType,
-    material: params.material,
-    brandCode: params.brandCode,
-    sector: params.sector,
-    subSector: params.subSector,
-    function: params.function,
-  });
+  // 调试日志（可在需要时取消注释）
+  // console.log('=== API Request ===');
+  // console.log('URL:', url);
+  // console.log('Params:', { 
+  //   page, 
+  //   limit, 
+  //   sort: normalizedSort, 
+  //   category, 
+  //   keyword,
+  //   minPrice: params.minPrice,
+  //   maxPrice: params.maxPrice,
+  //   minDate: params.minDate,
+  //   maxDate: params.maxDate,
+  //   buyerName: params.buyerName,
+  //   itemType: params.itemType,
+  //   material: params.material,
+  //   brandCode: params.brandCode,
+  //   sector: params.sector,
+  //   subSector: params.subSector,
+  //   function: params.function,
+  // });
   
   const response = await fetch(url, {
     method: 'GET',
@@ -299,6 +300,134 @@ export async function updateSalesData(
   } catch (err) {
     const error = err as Error;
     console.error('Error in updateSalesData:', error);
+    throw error;
+  }
+}
+
+/**
+ * 下载 Excel 模板
+ * @param token 认证 token（可选，如果不提供则从 localStorage 获取）
+ */
+export async function downloadExcelTemplate(token?: string): Promise<void> {
+  const authToken = token || getToken();
+  if (!authToken) {
+    throw new Error('Unauthorized: Please login first');
+  }
+
+  const url = `${API_BASE_URL}/buyer/sales-data/template`;
+
+  try {
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${authToken}`,
+      },
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      const errorMessage = errorData.message || errorData.error || `Request failed: ${response.status}`;
+      throw new Error(errorMessage);
+    }
+
+    // 获取文件名（从 Content-Disposition 头或使用默认名称）
+    const contentDisposition = response.headers.get('Content-Disposition');
+    let fileName = 'Sales_Data_Template.xlsx';
+    if (contentDisposition) {
+      const fileNameMatch = contentDisposition.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/);
+      if (fileNameMatch && fileNameMatch[1]) {
+        fileName = fileNameMatch[1].replace(/['"]/g, '');
+        // 处理 UTF-8 编码的文件名
+        if (fileName.startsWith('UTF-8\'\'')) {
+          fileName = decodeURIComponent(fileName.replace(/^UTF-8''/, ''));
+        }
+      }
+    }
+
+    // 获取文件 blob
+    const blob = await response.blob();
+
+    // 创建下载链接
+    const downloadUrl = window.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = downloadUrl;
+    link.download = fileName;
+    document.body.appendChild(link);
+    link.click();
+
+    // 清理
+    document.body.removeChild(link);
+    window.URL.revokeObjectURL(downloadUrl);
+  } catch (err) {
+    const error = err as Error;
+    console.error('Error downloading template:', error);
+    throw error;
+  }
+}
+
+/**
+ * 批量导入销售数据（上传 Excel 文件）
+ * @param file Excel 文件
+ * @param token 认证 token（可选，如果不提供则从 localStorage 获取）
+ * @returns 导入结果
+ */
+export async function bulkImportSalesData(
+  file: File,
+  token?: string
+): Promise<{ success: number; failed: number; errors: string[] }> {
+  const authToken = token || getToken();
+  if (!authToken) {
+    throw new Error('Unauthorized: Please login first');
+  }
+
+  const url = `${API_BASE_URL}/buyer/sales-data/bulk-import`;
+
+  // 使用 FormData 上传文件
+  const formData = new FormData();
+  formData.append('file', file);
+
+  try {
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${authToken}`,
+        // 不要设置 Content-Type，让浏览器自动设置 multipart/form-data 边界
+      },
+      body: formData,
+    });
+
+    if (!response.ok) {
+      let errorMessage = `Request failed: ${response.status}`;
+      try {
+        const errorData = await response.json();
+        errorMessage = errorData.message || errorData.error || errorData.detail || errorMessage;
+        
+        // 如果是数组格式的错误（FastAPI 验证错误）
+        if (Array.isArray(errorData.detail)) {
+          const details = errorData.detail.map((err: any) => 
+            `${err.loc?.join('.')}: ${err.msg}`
+          ).join('; ');
+          errorMessage = details || errorMessage;
+        }
+      } catch {
+        // 如果无法解析 JSON，尝试读取文本
+        try {
+          const text = await response.text();
+          if (text) {
+            errorMessage = text;
+          }
+        } catch {
+          // 忽略
+        }
+      }
+      throw new Error(errorMessage);
+    }
+
+    const result = await response.json();
+    return result;
+  } catch (err) {
+    const error = err as Error;
+    console.error('Error in bulkImportSalesData:', error);
     throw error;
   }
 }

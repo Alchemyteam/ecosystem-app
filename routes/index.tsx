@@ -18,6 +18,8 @@ import TrackingPage from '../pages/TrackingPage';
 import SellerPage from '../pages/SellerPage';
 import PEPage from '../pages/PEPage';
 import SalesDataManagementPage from '../pages/SalesDataManagementPage';
+import BuyerLayout from '../layouts/BuyerLayout';
+import AuthCallbackRoute from './AuthCallbackRoute';
 
 // Protected Route Component
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -52,15 +54,20 @@ const PublicRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
 const AppRoutes: React.FC = () => {
   return (
     <Routes>
-      {/* Public Routes */}
-      <Route
-        path="/login"
-        element={
-          <PublicRoute>
-            <LoginPage />
-          </PublicRoute>
-        }
-      />
+            {/* Public Routes */}
+            <Route
+              path="/login"
+              element={
+                <PublicRoute>
+                  <LoginPage />
+                </PublicRoute>
+              }
+            />
+            {/* OAuth Callback Route */}
+            <Route
+              path="/auth/bc/callback"
+              element={<AuthCallbackRoute />}
+            />
       
       {/* Protected Routes */}
       <Route

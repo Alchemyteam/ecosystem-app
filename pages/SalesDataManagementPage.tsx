@@ -8,7 +8,9 @@ import {
   createSalesData,
   updateSalesData,
   deleteSalesData,
+  bulkImportSalesData,
 } from '../services/salesDataApi';
+import { downloadExcelTemplate } from '../services/salesDataApi';
 import {
   Plus,
   Edit,
@@ -21,6 +23,11 @@ import {
   ChevronLeft,
   ChevronRight,
   Database,
+  Download,
+  Upload,
+  CheckCircle2,
+  ChevronsLeft,
+  ChevronsRight,
 } from 'lucide-react';
 
 const SalesDataManagementPage: React.FC = () => {
@@ -44,6 +51,17 @@ const SalesDataManagementPage: React.FC = () => {
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [itemToDelete, setItemToDelete] = useState<SalesData | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+
+  // Excel upload state
+  const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState<{
+    total: number;
+    processed: number;
+    success: number;
+    failed: number;
+    errors: string[];
+  } | null>(null);
 
   // Fetch data
   const fetchData = async () => {
@@ -216,13 +234,42 @@ const SalesDataManagementPage: React.FC = () => {
                 </h1>
                 <p className="text-slate-600">Manage and maintain sales data</p>
               </div>
-              <button
-                onClick={handleAdd}
-                className="px-4 py-2 bg-brand-600 text-white rounded-lg font-medium hover:bg-brand-700 transition-colors flex items-center gap-2"
-              >
-                <Plus size={18} />
-                Add Data
-              </button>
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={async () => {
+                    try {
+                      const token = getToken();
+                      if (!token) {
+                        setError('Unauthorized: Please login first');
+                        return;
+                      }
+                      await downloadExcelTemplate(token);
+                    } catch (err) {
+                      console.error('Error downloading template:', err);
+                      const apiError = err as { message?: string };
+                      setError(apiError.message || 'Failed to download template. Please try again.');
+                    }
+                  }}
+                  className="px-4 py-2 bg-slate-100 text-slate-700 rounded-lg font-medium hover:bg-slate-200 transition-colors flex items-center gap-2"
+                >
+                  <Download size={18} />
+                  Download Template
+                </button>
+                <button
+                  onClick={() => setIsUploadModalOpen(true)}
+                  className="px-4 py-2 bg-green-600 text-white rounded-lg font-medium hover:bg-green-700 transition-colors flex items-center gap-2"
+                >
+                  <Upload size={18} />
+                  Upload Excel
+                </button>
+                <button
+                  onClick={handleAdd}
+                  className="px-4 py-2 bg-brand-600 text-white rounded-lg font-medium hover:bg-brand-700 transition-colors flex items-center gap-2"
+                >
+                  <Plus size={18} />
+                  Add Data
+                </button>
+              </div>
             </div>
           </div>
 
@@ -365,9 +412,18 @@ const SalesDataManagementPage: React.FC = () => {
                   </div>
                   <div className="flex items-center gap-2">
                     <button
+                      onClick={() => setCurrentPage(1)}
+                      disabled={currentPage === 1}
+                      className="px-3 py-2 border border-slate-200 rounded-lg text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                      title="First page"
+                    >
+                      <ChevronsLeft size={16} />
+                    </button>
+                    <button
                       onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
                       disabled={currentPage === 1}
                       className="px-3 py-2 border border-slate-200 rounded-lg text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                      title="Previous page"
                     >
                       <ChevronLeft size={16} />
                     </button>
@@ -402,8 +458,17 @@ const SalesDataManagementPage: React.FC = () => {
                       onClick={() => setCurrentPage((prev) => Math.min(totalPages, prev + 1))}
                       disabled={currentPage === totalPages}
                       className="px-3 py-2 border border-slate-200 rounded-lg text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                      title="Next page"
                     >
                       <ChevronRight size={16} />
+                    </button>
+                    <button
+                      onClick={() => setCurrentPage(totalPages)}
+                      disabled={currentPage === totalPages}
+                      className="px-3 py-2 border border-slate-200 rounded-lg text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                      title="Last page"
+                    >
+                      <ChevronsRight size={16} />
                     </button>
                   </div>
                 </div>
@@ -775,6 +840,174 @@ const SalesDataManagementPage: React.FC = () => {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Excel Upload Modal */}
+      {isUploadModalOpen && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl shadow-xl max-w-2xl w-full">
+            <div className="sticky top-0 bg-white border-b border-slate-200 px-6 py-4 flex items-center justify-between">
+              <h2 className="text-xl font-bold text-slate-900">Upload Excel File</h2>
+              <button
+                onClick={() => {
+                  setIsUploadModalOpen(false);
+                  setUploadProgress(null);
+                }}
+                className="p-2 text-slate-400 hover:text-slate-600 transition-colors"
+              >
+                <X size={20} />
+              </button>
+            </div>
+            <div className="p-6">
+              {!uploadProgress ? (
+                <>
+                  <div className="mb-6">
+                    <p className="text-sm text-slate-600 mb-4">
+                      Please upload an Excel file (.xlsx) that matches the template format. 
+                      Make sure to download the template first to ensure correct column headers.
+                    </p>
+                    <label className="block">
+                      <div className="mt-2 flex justify-center px-6 pt-5 pb-6 border-2 border-slate-300 border-dashed rounded-lg hover:border-brand-500 transition-colors cursor-pointer">
+                        <div className="space-y-1 text-center">
+                          <Upload className="mx-auto h-12 w-12 text-slate-400" />
+                          <div className="flex text-sm text-slate-600">
+                            <span className="relative cursor-pointer bg-white rounded-md font-medium text-brand-600 hover:text-brand-500 focus-within:outline-none">
+                              Click to upload
+                              <input
+                                type="file"
+                                accept=".xlsx,.xls"
+                                className="sr-only"
+                                onChange={async (e) => {
+                                  const file = e.target.files?.[0];
+                                  if (!file) return;
+
+                                  setIsUploading(true);
+                                  setError('');
+
+                                  try {
+                                    const token = getToken();
+                                    if (!token) {
+                                      throw new Error('Unauthorized: Please login first');
+                                    }
+
+                                    // 显示上传进度（初始状态）
+                                    setUploadProgress({
+                                      total: 100,
+                                      processed: 0,
+                                      success: 0,
+                                      failed: 0,
+                                      errors: [],
+                                    });
+
+                                    // 直接上传文件到后端
+                                    const result = await bulkImportSalesData(file, token);
+
+                                    // 更新进度
+                                    setUploadProgress({
+                                      total: result.success + result.failed,
+                                      processed: result.success + result.failed,
+                                      success: result.success,
+                                      failed: result.failed,
+                                      errors: result.errors,
+                                    });
+
+                                    // 刷新数据列表
+                                    await fetchData();
+                                  } catch (err) {
+                                    console.error('Error uploading file:', err);
+                                    const apiError = err as { message?: string };
+                                    setError(apiError.message || 'Failed to upload file. Please try again.');
+                                  } finally {
+                                    setIsUploading(false);
+                                  }
+                                }}
+                                disabled={isUploading}
+                              />
+                            </span>
+                            <p className="pl-1">or drag and drop</p>
+                          </div>
+                          <p className="text-xs text-slate-500">Excel files only (.xlsx, .xls)</p>
+                        </div>
+                      </div>
+                    </label>
+                  </div>
+                  <div className="flex items-center justify-end gap-3">
+                    <button
+                      onClick={() => {
+                        setIsUploadModalOpen(false);
+                        setUploadProgress(null);
+                      }}
+                      className="px-4 py-2 border border-slate-200 rounded-lg text-sm font-medium text-slate-700 hover:bg-slate-50 transition-colors"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </>
+              ) : (
+                <div className="space-y-4">
+                  <div className="bg-slate-50 rounded-lg p-4">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-sm font-medium text-slate-700">Upload Progress</span>
+                      <span className="text-sm text-slate-600">
+                        {uploadProgress.processed} / {uploadProgress.total}
+                      </span>
+                    </div>
+                    <div className="w-full bg-slate-200 rounded-full h-2">
+                      <div
+                        className="bg-brand-600 h-2 rounded-full transition-all duration-300"
+                        style={{ width: `${(uploadProgress.processed / uploadProgress.total) * 100}%` }}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="bg-green-50 rounded-lg p-4">
+                      <div className="flex items-center gap-2 mb-1">
+                        <CheckCircle2 className="text-green-600" size={20} />
+                        <span className="text-sm font-medium text-green-700">Success</span>
+                      </div>
+                      <p className="text-2xl font-bold text-green-600">{uploadProgress.success}</p>
+                    </div>
+                    <div className="bg-red-50 rounded-lg p-4">
+                      <div className="flex items-center gap-2 mb-1">
+                        <AlertCircle className="text-red-600" size={20} />
+                        <span className="text-sm font-medium text-red-700">Failed</span>
+                      </div>
+                      <p className="text-2xl font-bold text-red-600">{uploadProgress.failed}</p>
+                    </div>
+                  </div>
+
+                  {uploadProgress.errors.length > 0 && (
+                    <div className="bg-red-50 border border-red-200 rounded-lg p-4 max-h-48 overflow-y-auto">
+                      <p className="text-sm font-medium text-red-700 mb-2">Errors:</p>
+                      <ul className="text-xs text-red-600 space-y-1">
+                        {uploadProgress.errors.slice(0, 10).map((error, index) => (
+                          <li key={index}>• {error}</li>
+                        ))}
+                        {uploadProgress.errors.length > 10 && (
+                          <li className="text-red-500">... and {uploadProgress.errors.length - 10} more errors</li>
+                        )}
+                      </ul>
+                    </div>
+                  )}
+
+                  <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-200">
+                    <button
+                      onClick={() => {
+                        setIsUploadModalOpen(false);
+                        setUploadProgress(null);
+                        fetchData();
+                      }}
+                      className="px-4 py-2 bg-brand-600 text-white rounded-lg text-sm font-medium hover:bg-brand-700 transition-colors"
+                    >
+                      Close
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       )}

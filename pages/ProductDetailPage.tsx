@@ -363,23 +363,29 @@ const ProductDetailPage: React.FC = () => {
             <div className="max-w-6xl mx-auto">
               <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
                 <div className="p-8">
+                  {/* Product Image Section */}
+                  <div className="mb-8">
+                    <div className="relative w-full h-96 bg-slate-100 rounded-xl overflow-hidden mb-6">
+                      <img
+                        src="/img/COLOURBOX26670563.webp"
+                        alt={product.ItemName || 'Product image'}
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                  </div>
+
                   {/* Product Header */}
                   <div className="mb-6">
-                    <div className="flex items-center gap-3 mb-4">
-                      <div className="w-20 h-20 rounded-xl bg-slate-100 flex items-center justify-center">
-                        <Package className="text-slate-400" size={40} />
-                      </div>
-                      <div className="flex-1">
-                        <h1 className="text-3xl font-bold text-slate-900 mb-2">
-                          {product.ItemName || 'Unknown Product'}
-                        </h1>
-                        {product.ItemCode && (
-                          <p className="text-sm text-slate-600">Item Code: {product.ItemCode}</p>
-                        )}
-                        {product.id && (
-                          <p className="text-xs text-slate-500">ID: {product.id}</p>
-                        )}
-                      </div>
+                    <h1 className="text-3xl font-bold text-slate-900 mb-2">
+                      {product.ItemName || 'Unknown Product'}
+                    </h1>
+                    <div className="flex items-center gap-4 text-sm text-slate-600">
+                      {product.ItemCode && (
+                        <p>Item Code: {product.ItemCode}</p>
+                      )}
+                      {product.id && (
+                        <p className="text-xs text-slate-500">ID: {product.id}</p>
+                      )}
                     </div>
                   </div>
 

@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { authApi, getToken, ApiError } from '../services/api';
+import { initiateBCLogin, handleBCCallback, checkBCCallback } from '../services/bcSsoApi';
 
 export type UserRole = 'Buyer' | 'Seller' | 'PE';
 
@@ -8,6 +9,7 @@ interface User {
   email: string;
   name?: string;
   role?: UserRole;
+  bcUserId?: string; // Business Central User ID
 }
 
 interface AuthContextType {
@@ -17,8 +19,10 @@ interface AuthContextType {
   isLoading: boolean;
   login: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
   register: (email: string, password: string, name?: string) => Promise<{ success: boolean; error?: string }>;
+  loginWithBC: () => Promise<void>; // Business Central SSO 登录
   logout: () => void;
   setCurrentRole: (role: UserRole) => void;
+  setUser: (user: User | null) => void; // 用于 SSO 回调时设置用户
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -107,11 +111,25 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  // Business Central SSO 登录
+  const loginWithBC = async (): Promise<void> => {
+    try {
+      await initiateBCLogin();
+      // 注意：initiateBCLogin 会重定向页面，所以这里不会返回
+    } catch (error) {
+      console.error('BC Login error:', error);
+      throw error;
+    }
+  };
+
   const logout = () => {
     setUser(null);
     authApi.logout();
     // Navigate will be handled by the route protection
   };
+
+  // 检查是否有 BC OAuth 回调（仅在登录页面或回调路由处理）
+  // 注意：这个逻辑应该在 AuthCallbackRoute 中处理，这里保留作为备用
 
   return (
     <AuthContext.Provider
@@ -122,8 +140,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         isLoading,
         login,
         register,
+        loginWithBC,
         logout,
         setCurrentRole,
+        setUser,
       }}
     >
       {children}
