@@ -133,7 +133,7 @@ const AISearchPage: React.FC = () => {
         {
           id: '1',
           role: 'assistant',
-          content: 'Hello! I am your AI Material Search Assistant. I can help you with:\n\n🔍 **Search Materials** - By code, name, category, brand, etc.\n📊 **View Historical Data** - Price trends, transaction records\n💡 **Smart Recommendations** - Find suitable products based on your needs\n\nTry entering any search key to start searching!',
+          content: 'Hi, I’m AURA. What would you like to know?',
           timestamp: new Date(),
         },
       ]);
@@ -523,7 +523,7 @@ const AISearchPage: React.FC = () => {
                   <Sparkles className="text-white" size={20} />
                 </div>
                 <div>
-                  <h1 className="text-xl font-bold text-slate-900">AI Material Search</h1>
+                  <h1 className="text-xl font-bold text-slate-900">AURA</h1>
                   <p className="text-sm text-slate-600">Smart search for material info, historical prices, transaction records, etc.</p>
                 </div>
               </div>
