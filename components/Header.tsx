@@ -30,7 +30,7 @@ const Header: React.FC = () => {
             X
           </div>
           <span className={`font-bold text-lg tracking-tight ${isScrolled ? 'text-slate-900' : 'text-slate-900'}`}>
-            [X]
+            Aura
           </span>
         </Link>
 

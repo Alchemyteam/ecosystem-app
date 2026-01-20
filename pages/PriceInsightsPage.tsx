@@ -1,28 +1,16 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import Header from '../components/Header';
+import BuyerSidebar from '../components/BuyerSidebar';
 import {
-  Home,
   Package,
-  ChevronDown,
-  ChevronRight,
-  MessageSquare,
-  User,
-  HelpCircle,
-  FileText,
-  Heart,
-  ShoppingCart,
   TrendingUp,
   TrendingDown,
   DollarSign,
   BarChart3,
-  LineChart,
-  PieChart,
   ArrowUp,
   ArrowDown,
   Minus,
-  Calendar,
-  Filter,
   Download,
 } from 'lucide-react';
 
@@ -46,7 +34,6 @@ interface ProductPriceInsight {
 }
 
 const PriceInsightsPage: React.FC = () => {
-  const [expandedMenus, setExpandedMenus] = useState<Set<string>>(new Set(['products', 'orders', 'favorites', 'account']));
   const [selectedTimeRange, setSelectedTimeRange] = useState<'1M' | '3M' | '6M' | '1Y' | 'ALL'>('6M');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
 
@@ -139,17 +126,6 @@ const PriceInsightsPage: React.FC = () => {
     marketTrend: 'up' as const,
   };
 
-  const toggleMenu = (menuKey: string) => {
-    setExpandedMenus((prev) => {
-      const newSet = new Set(prev);
-      if (newSet.has(menuKey)) {
-        newSet.delete(menuKey);
-      } else {
-        newSet.add(menuKey);
-      }
-      return newSet;
-    });
-  };
 
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat('en-US', {
@@ -207,139 +183,7 @@ const PriceInsightsPage: React.FC = () => {
       <Header />
       <main className="pt-20 flex h-screen overflow-hidden">
         {/* Sidebar */}
-        <aside className="w-64 bg-white border-r border-slate-200 h-[calc(100vh-5rem)] overflow-y-auto">
-          <nav className="p-4 space-y-1">
-            {/* Home */}
-            <Link
-              to="/"
-              className="flex items-center gap-3 px-3 py-2 rounded-lg text-slate-700 hover:bg-slate-100 hover:text-brand-600 transition-colors"
-            >
-              <Home className="w-5 h-5" />
-              <span className="font-medium">Home</span>
-            </Link>
-
-            {/* Products */}
-            <div>
-              <button
-                onClick={() => toggleMenu('products')}
-                className="w-full flex items-center justify-between px-3 py-2 rounded-lg text-slate-700 hover:bg-slate-100 hover:text-brand-600 transition-colors"
-              >
-                <div className="flex items-center gap-3">
-                  <Package className="w-5 h-5" />
-                  <span className="font-medium">Products</span>
-                </div>
-                {expandedMenus.has('products') ? (
-                  <ChevronDown className="w-4 h-4" />
-                ) : (
-                  <ChevronRight className="w-4 h-4" />
-                )}
-              </button>
-              {expandedMenus.has('products') && (
-                <div className="ml-8 mt-1 space-y-1">
-                  <Link
-                    to="/buyer/products"
-                    className="block px-3 py-2 rounded-lg text-sm text-slate-600 hover:bg-slate-100 hover:text-brand-600 transition-colors"
-                  >
-                    All Products
-                  </Link>
-                  <Link
-                    to="/buyer/ai-search"
-                    className="block px-3 py-2 rounded-lg text-sm text-slate-600 hover:bg-slate-100 hover:text-brand-600 transition-colors"
-                  >
-                    AI Search
-                  </Link>
-                  <Link
-                    to="/buyer/price-insights"
-                    className="block px-3 py-2 rounded-lg text-sm text-slate-600 hover:bg-slate-100 hover:text-brand-600 transition-colors bg-brand-50 text-brand-600"
-                  >
-                    Price Insights
-                  </Link>
-                </div>
-              )}
-            </div>
-
-            {/* Orders */}
-            <div>
-              <button
-                onClick={() => toggleMenu('orders')}
-                className="w-full flex items-center justify-between px-3 py-2 rounded-lg text-slate-700 hover:bg-slate-100 hover:text-brand-600 transition-colors"
-              >
-                <div className="flex items-center gap-3">
-                  <FileText className="w-5 h-5" />
-                  <span className="font-medium">Orders</span>
-                </div>
-                {expandedMenus.has('orders') ? (
-                  <ChevronDown className="w-4 h-4" />
-                ) : (
-                  <ChevronRight className="w-4 h-4" />
-                )}
-              </button>
-            </div>
-
-            {/* Cart */}
-            <Link
-              to="/buyer/cart"
-              className="flex items-center gap-3 px-3 py-2 rounded-lg text-slate-700 hover:bg-slate-100 hover:text-brand-600 transition-colors"
-            >
-              <ShoppingCart className="w-5 h-5" />
-              <span className="font-medium">Cart</span>
-            </Link>
-
-            {/* Favorites */}
-            <div>
-              <button
-                onClick={() => toggleMenu('favorites')}
-                className="w-full flex items-center justify-between px-3 py-2 rounded-lg text-slate-700 hover:bg-slate-100 hover:text-brand-600 transition-colors"
-              >
-                <div className="flex items-center gap-3">
-                  <Heart className="w-5 h-5" />
-                  <span className="font-medium">Favorites</span>
-                </div>
-                {expandedMenus.has('favorites') ? (
-                  <ChevronDown className="w-4 h-4" />
-                ) : (
-                  <ChevronRight className="w-4 h-4" />
-                )}
-              </button>
-            </div>
-
-            {/* Messages */}
-            <Link
-              to="#"
-              className="flex items-center gap-3 px-3 py-2 rounded-lg text-slate-700 hover:bg-slate-100 hover:text-brand-600 transition-colors"
-            >
-              <MessageSquare className="w-5 h-5" />
-              <span className="font-medium">Messages</span>
-            </Link>
-
-            {/* Account */}
-            <div>
-              <button
-                onClick={() => toggleMenu('account')}
-                className="w-full flex items-center justify-between px-3 py-2 rounded-lg text-slate-700 hover:bg-slate-100 hover:text-brand-600 transition-colors"
-              >
-                <div className="flex items-center gap-3">
-                  <User className="w-5 h-5" />
-                  <span className="font-medium">Account</span>
-                </div>
-                {expandedMenus.has('account') ? (
-                  <ChevronDown className="w-4 h-4" />
-                ) : (
-                  <ChevronRight className="w-4 h-4" />
-                )}
-              </button>
-            </div>
-
-            {/* Support */}
-            <Link
-              to="#"
-              className="flex items-center gap-3 px-3 py-2 rounded-lg text-slate-700 hover:bg-slate-100 hover:text-brand-600 transition-colors"
-            >
-              <HelpCircle className="w-5 h-5" />
-              <span className="font-medium">Support</span>
-            </Link>
-          </nav>
-        </aside>
+        <BuyerSidebar />
 
         {/* Main Content */}
         <div className="flex-1 flex flex-col overflow-y-auto">

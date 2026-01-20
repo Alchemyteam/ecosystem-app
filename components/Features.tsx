@@ -11,7 +11,7 @@ const Features: React.FC = () => {
             An Integrated Ecosystem Platform
           </h3>
           <p className="text-base text-slate-600">
-            [X] delivers a comprehensive suite of modules designed to digitize the formwork value chain, from compliance to demand generation.
+            Aura delivers a comprehensive suite of modules designed to digitize the formwork value chain, from compliance to demand generation.
           </p>
         </div>
 

@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import Header from '../components/Header';
+import BuyerSidebar from '../components/BuyerSidebar';
 import { buyerApi, getToken } from '../services/api';
 import { SalesData } from '../types/salesData';
 // 可选：使用新的 useSalesData Hook
@@ -13,32 +14,21 @@ import {
   ChevronRight,
   Loader2,
   AlertCircle,
-  ArrowUpDown,
   Search,
   Filter,
-  TrendingDown,
   DollarSign,
-  Star,
   CheckCircle2,
-  Home,
-  ChevronDown,
-  ChevronRight as ChevronRightIcon,
-  MessageSquare,
-  User,
-  HelpCircle,
-  FileText,
-  Heart,
   Sparkles,
   LayoutGrid,
   Table,
-  PanelLeftClose,
-  PanelLeftOpen,
   X,
   SlidersHorizontal,
   Calendar,
   Building2,
   Tag,
   Eye,
+  FileText,
+  User,
 } from 'lucide-react';
 
 const ProductsListPage: React.FC = () => {
@@ -53,9 +43,7 @@ const ProductsListPage: React.FC = () => {
   const [sortBy, setSortBy] = useState('newest');
   const [category, setCategory] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
-  const [expandedMenus, setExpandedMenus] = useState<Set<string>>(new Set(['products', 'orders', 'favorites', 'account']));
   const [viewMode, setViewMode] = useState<'card' | 'table'>('card');
-  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [categoryOptions, setCategoryOptions] = useState<Array<{ label: string; value: string }>>([
     { label: 'All Categories', value: 'all' },
@@ -100,17 +88,6 @@ const ProductsListPage: React.FC = () => {
     source: '',            // Source 来源
   });
 
-  const toggleMenu = (menuKey: string) => {
-    setExpandedMenus((prev) => {
-      const newSet = new Set(prev);
-      if (newSet.has(menuKey)) {
-        newSet.delete(menuKey);
-      } else {
-        newSet.add(menuKey);
-      }
-      return newSet;
-    });
-  };
 
   const handleAskAI = (product: SalesData) => {
     // Convert SalesData to BuyerProduct format for AI Search
@@ -362,8 +339,8 @@ const ProductsListPage: React.FC = () => {
   }, [currentPage, sortBy, category, searchTerm]);
 
   useEffect(() => {
-    console.log('viewMode:', viewMode, 'isSidebarOpen:', isSidebarOpen);
-  }, [viewMode, isSidebarOpen]);
+    console.log('viewMode:', viewMode);
+  }, [viewMode]);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -472,238 +449,10 @@ const ProductsListPage: React.FC = () => {
       )}
       <main className="pt-20 flex h-screen overflow-hidden">
         {/* Sidebar */}
-        <aside
-          className={`bg-white border-r border-slate-200 h-[calc(100vh-5rem)] transition-all duration-300 ${isSidebarOpen ? 'w-64' : 'w-0'
-            } ${isSidebarOpen ? 'overflow-y-auto' : 'overflow-hidden'}`}
-        >
-          <nav className={`p-4 space-y-1 transition-opacity duration-300 ${isSidebarOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
-            {/* Toggle Button */}
-            <div className="flex items-center justify-between mb-2 pb-2 border-b border-slate-200">
-              <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Menu</span>
-              <button
-                onClick={() => setIsSidebarOpen(false)}
-                className="p-1.5 rounded-lg text-slate-500 hover:bg-slate-100 hover:text-slate-900 transition-colors"
-                title="Hide sidebar"
-              >
-                <PanelLeftClose size={16} />
-              </button>
-            </div>
-            {/* Home */}
-            <Link
-              to="/"
-              className="flex items-center gap-3 px-3 py-2 rounded-lg text-slate-700 hover:bg-slate-100 hover:text-brand-600 transition-colors"
-            >
-              <Home className="w-5 h-5" />
-              <span className="font-medium">Home</span>
-            </Link>
-
-            {/* Products */}
-            <div>
-              <button
-                onClick={() => toggleMenu('products')}
-                className="w-full flex items-center justify-between px-3 py-2 rounded-lg text-slate-700 hover:bg-slate-100 hover:text-brand-600 transition-colors"
-              >
-                <div className="flex items-center gap-3">
-                  <Package className="w-5 h-5" />
-                  <span className="font-medium">Products</span>
-                </div>
-                {expandedMenus.has('products') ? (
-                  <ChevronDown className="w-4 h-4" />
-                ) : (
-                  <ChevronRightIcon className="w-4 h-4" />
-                )}
-              </button>
-              {expandedMenus.has('products') && (
-                <div className="ml-8 mt-1 space-y-1">
-                  <Link
-                    to="/buyer/products"
-                    className="block px-3 py-2 rounded-lg text-sm text-slate-600 hover:bg-slate-100 hover:text-brand-600 transition-colors"
-                  >
-                    All Products
-                  </Link>
-                  <Link
-                    to="/buyer/ai-search"
-                    className="block px-3 py-2 rounded-lg text-sm text-slate-600 hover:bg-slate-100 hover:text-brand-600 transition-colors"
-                  >
-                    AI Search
-                  </Link>
-                  <Link
-                    to="/buyer/price-insights"
-                    className="block px-3 py-2 rounded-lg text-sm text-slate-600 hover:bg-slate-100 hover:text-brand-600 transition-colors"
-                  >
-                    Price Insights
-                  </Link>
-                </div>
-              )}
-            </div>
-
-            {/* Orders */}
-            <div>
-              <button
-                onClick={() => toggleMenu('orders')}
-                className="w-full flex items-center justify-between px-3 py-2 rounded-lg text-slate-700 hover:bg-slate-100 hover:text-brand-600 transition-colors"
-              >
-                <div className="flex items-center gap-3">
-                  <FileText className="w-5 h-5" />
-                  <span className="font-medium">Orders</span>
-                </div>
-                {expandedMenus.has('orders') ? (
-                  <ChevronDown className="w-4 h-4" />
-                ) : (
-                  <ChevronRightIcon className="w-4 h-4" />
-                )}
-              </button>
-              {expandedMenus.has('orders') && (
-                <div className="ml-8 mt-1 space-y-1">
-                  <Link
-                    to="/buyer/orders"
-                    className="block px-3 py-2 rounded-lg text-sm text-slate-600 hover:bg-slate-100 hover:text-brand-600 transition-colors"
-                  >
-                    All Orders
-                  </Link>
-                  <a
-                    href="#"
-                    className="block px-3 py-2 rounded-lg text-sm text-slate-600 hover:bg-slate-100 hover:text-brand-600 transition-colors"
-                  >
-                    Pending Payment
-                  </a>
-                  <a
-                    href="#"
-                    className="block px-3 py-2 rounded-lg text-sm text-slate-600 hover:bg-slate-100 hover:text-brand-600 transition-colors"
-                  >
-                    To Be Shipped
-                  </a>
-                  <a
-                    href="#"
-                    className="block px-3 py-2 rounded-lg text-sm text-slate-600 hover:bg-slate-100 hover:text-brand-600 transition-colors"
-                  >
-                    Shipped
-                  </a>
-                  <a
-                    href="#"
-                    className="block px-3 py-2 rounded-lg text-sm text-slate-600 hover:bg-slate-100 hover:text-brand-600 transition-colors"
-                  >
-                    Completed
-                  </a>
-                </div>
-              )}
-            </div>
-
-            {/* Cart */}
-            <Link
-              to="/buyer/cart"
-              className="flex items-center gap-3 px-3 py-2 rounded-lg text-slate-700 hover:bg-slate-100 hover:text-brand-600 transition-colors"
-            >
-              <ShoppingCart className="w-5 h-5" />
-              <span className="font-medium">Cart</span>
-            </Link>
-
-            {/* Favorites */}
-            <div>
-              <button
-                onClick={() => toggleMenu('favorites')}
-                className="w-full flex items-center justify-between px-3 py-2 rounded-lg text-slate-700 hover:bg-slate-100 hover:text-brand-600 transition-colors"
-              >
-                <div className="flex items-center gap-3">
-                  <Heart className="w-5 h-5" />
-                  <span className="font-medium">Favorites</span>
-                </div>
-                {expandedMenus.has('favorites') ? (
-                  <ChevronDown className="w-4 h-4" />
-                ) : (
-                  <ChevronRightIcon className="w-4 h-4" />
-                )}
-              </button>
-              {expandedMenus.has('favorites') && (
-                <div className="ml-8 mt-1 space-y-1">
-                  <a
-                    href="#"
-                    className="block px-3 py-2 rounded-lg text-sm text-slate-600 hover:bg-slate-100 hover:text-brand-600 transition-colors"
-                  >
-                    Products
-                  </a>
-                  <a
-                    href="#"
-                    className="block px-3 py-2 rounded-lg text-sm text-slate-600 hover:bg-slate-100 hover:text-brand-600 transition-colors"
-                  >
-                    Stores / Sellers
-                  </a>
-                </div>
-              )}
-            </div>
-
-            {/* Messages */}
-            <a
-              href="#"
-              className="flex items-center gap-3 px-3 py-2 rounded-lg text-slate-700 hover:bg-slate-100 hover:text-brand-600 transition-colors"
-            >
-              <MessageSquare className="w-5 h-5" />
-              <span className="font-medium">Messages</span>
-            </a>
-
-            {/* Account */}
-            <div>
-              <button
-                onClick={() => toggleMenu('account')}
-                className="w-full flex items-center justify-between px-3 py-2 rounded-lg text-slate-700 hover:bg-slate-100 hover:text-brand-600 transition-colors"
-              >
-                <div className="flex items-center gap-3">
-                  <User className="w-5 h-5" />
-                  <span className="font-medium">Account</span>
-                </div>
-                {expandedMenus.has('account') ? (
-                  <ChevronDown className="w-4 h-4" />
-                ) : (
-                  <ChevronRightIcon className="w-4 h-4" />
-                )}
-              </button>
-              {expandedMenus.has('account') && (
-                <div className="ml-8 mt-1 space-y-1">
-                  <a
-                    href="#"
-                    className="block px-3 py-2 rounded-lg text-sm text-slate-600 hover:bg-slate-100 hover:text-brand-600 transition-colors"
-                  >
-                    Profile
-                  </a>
-                  <a
-                    href="#"
-                    className="block px-3 py-2 rounded-lg text-sm text-slate-600 hover:bg-slate-100 hover:text-brand-600 transition-colors"
-                  >
-                    Address
-                  </a>
-                  <a
-                    href="#"
-                    className="block px-3 py-2 rounded-lg text-sm text-slate-600 hover:bg-slate-100 hover:text-brand-600 transition-colors"
-                  >
-                    Company Info
-                  </a>
-                </div>
-              )}
-            </div>
-
-            {/* Support */}
-            <a
-              href="#"
-              className="flex items-center gap-3 px-3 py-2 rounded-lg text-slate-700 hover:bg-slate-100 hover:text-brand-600 transition-colors"
-            >
-              <HelpCircle className="w-5 h-5" />
-              <span className="font-medium">Support</span>
-            </a>
-          </nav>
-        </aside>
+        <BuyerSidebar />
 
         {/* Main Content */}
         <div className="flex-1 bg-white relative min-w-0 h-full overflow-hidden flex">
-          {/* Sidebar Toggle Button (when sidebar is hidden) */}
-          {!isSidebarOpen && (
-            <button
-              onClick={() => setIsSidebarOpen(true)}
-              className="absolute left-4 top-8 z-10 p-2 bg-white border border-slate-200 rounded-lg shadow-sm text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition-colors"
-              title="Show sidebar"
-            >
-              <PanelLeftOpen size={20} />
-            </button>
-          )}
           
           {/* Content Area */}
           <div className="flex-1 overflow-y-auto min-w-0">

@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useLocation, Link, useNavigate } from 'react-router-dom';
 import Header from '../components/Header';
+import BuyerSidebar from '../components/BuyerSidebar';
 
 import { BuyerProduct, ApiError, buyerApi } from '../services/api';
 import { TableData, ActionData } from '../types/chat';
@@ -12,16 +13,8 @@ import {
   Bot,
   User,
   Loader2,
-  Home,
-  Package,
-  ChevronDown,
-  ChevronRight,
   MessageSquare,
   ShoppingCart,
-  Heart,
-  FileText,
-  User as UserIcon,
-  HelpCircle,
   AlertCircle,
   CheckCircle2,
   Search,
@@ -48,7 +41,6 @@ const AISearchPage: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [conversationId, setConversationId] = useState<string | undefined>(undefined);
   const [error, setError] = useState<string | null>(null);
-  const [expandedMenus, setExpandedMenus] = useState<Set<string>>(new Set(['products', 'orders', 'favorites', 'account']));
   const [showDebug, setShowDebug] = useState(false);
   const [lastResponse, setLastResponse] = useState<any>(null);
   const [showExamples, setShowExamples] = useState(false);
@@ -79,17 +71,6 @@ const AISearchPage: React.FC = () => {
     { category: 'Multiple Keywords', examples: ['19P+5 micron+99 percent efficiency'], description: 'Use + to connect multiple keywords for combined search' },
   ];
 
-  const toggleMenu = (menuKey: string) => {
-    setExpandedMenus((prev) => {
-      const newSet = new Set(prev);
-      if (newSet.has(menuKey)) {
-        newSet.delete(menuKey);
-      } else {
-        newSet.add(menuKey);
-      }
-      return newSet;
-    });
-  };
 
   const handleAddToCart = async (productId: string) => {
     // 验证 productId
@@ -290,217 +271,7 @@ const AISearchPage: React.FC = () => {
       )}
       <main className="pt-20 flex h-screen overflow-hidden">
         {/* Sidebar */}
-        <aside className="w-64 bg-white border-r border-slate-200 h-full overflow-y-auto">
-          <nav className="p-4 space-y-1">
-            {/* Home */}
-            <Link
-              to="/"
-              className="flex items-center gap-3 px-3 py-2 rounded-lg text-slate-700 hover:bg-slate-100 hover:text-brand-600 transition-colors"
-            >
-              <Home className="w-5 h-5" />
-              <span className="font-medium">Home</span>
-            </Link>
-
-            {/* Products */}
-            <div>
-              <button
-                onClick={() => toggleMenu('products')}
-                className="w-full flex items-center justify-between px-3 py-2 rounded-lg text-slate-700 hover:bg-slate-100 hover:text-brand-600 transition-colors"
-              >
-                <div className="flex items-center gap-3">
-                  <Package className="w-5 h-5" />
-                  <span className="font-medium">Products</span>
-                </div>
-                {expandedMenus.has('products') ? (
-                  <ChevronDown className="w-4 h-4" />
-                ) : (
-                  <ChevronRight className="w-4 h-4" />
-                )}
-              </button>
-              {expandedMenus.has('products') && (
-                <div className="ml-8 mt-1 space-y-1">
-                  <Link
-                    to="/buyer/products"
-                    className="block px-3 py-2 rounded-lg text-sm text-slate-600 hover:bg-slate-100 hover:text-brand-600 transition-colors"
-                  >
-                    All Products
-                  </Link>
-                  <Link
-                    to="/buyer/ai-search"
-                    className="block px-3 py-2 rounded-lg text-sm text-slate-600 hover:bg-slate-100 hover:text-brand-600 transition-colors bg-brand-50 text-brand-600"
-                  >
-                    AI Search
-                  </Link>
-                  <Link
-                    to="/buyer/price-insights"
-                    className="block px-3 py-2 rounded-lg text-sm text-slate-600 hover:bg-slate-100 hover:text-brand-600 transition-colors"
-                  >
-                    Price Insights
-                  </Link>
-                </div>
-              )}
-            </div>
-
-            {/* Orders */}
-            <div>
-              <button
-                onClick={() => toggleMenu('orders')}
-                className="w-full flex items-center justify-between px-3 py-2 rounded-lg text-slate-700 hover:bg-slate-100 hover:text-brand-600 transition-colors"
-              >
-                <div className="flex items-center gap-3">
-                  <FileText className="w-5 h-5" />
-                  <span className="font-medium">Orders</span>
-                </div>
-                {expandedMenus.has('orders') ? (
-                  <ChevronDown className="w-4 h-4" />
-                ) : (
-                  <ChevronRight className="w-4 h-4" />
-                )}
-              </button>
-              {expandedMenus.has('orders') && (
-                <div className="ml-8 mt-1 space-y-1">
-                  <Link
-                    to="/buyer/orders"
-                    className="block px-3 py-2 rounded-lg text-sm text-slate-600 hover:bg-slate-100 hover:text-brand-600 transition-colors"
-                  >
-                    All Orders
-                  </Link>
-                  <Link
-                    to="/buyer/tracking"
-                    className="block px-3 py-2 rounded-lg text-sm text-slate-600 hover:bg-slate-100 hover:text-brand-600 transition-colors"
-                  >
-                    Shipment Tracking
-                  </Link>
-                  <a
-                    href="#"
-                    className="block px-3 py-2 rounded-lg text-sm text-slate-600 hover:bg-slate-100 hover:text-brand-600 transition-colors"
-                  >
-                    Pending Payment
-                  </a>
-                  <a
-                    href="#"
-                    className="block px-3 py-2 rounded-lg text-sm text-slate-600 hover:bg-slate-100 hover:text-brand-600 transition-colors"
-                  >
-                    To Be Shipped
-                  </a>
-                  <a
-                    href="#"
-                    className="block px-3 py-2 rounded-lg text-sm text-slate-600 hover:bg-slate-100 hover:text-brand-600 transition-colors"
-                  >
-                    Shipped
-                  </a>
-                  <a
-                    href="#"
-                    className="block px-3 py-2 rounded-lg text-sm text-slate-600 hover:bg-slate-100 hover:text-brand-600 transition-colors"
-                  >
-                    Completed
-                  </a>
-                </div>
-              )}
-            </div>
-
-            {/* Cart */}
-            <Link
-              to="/buyer/cart"
-              className="flex items-center gap-3 px-3 py-2 rounded-lg text-slate-700 hover:bg-slate-100 hover:text-brand-600 transition-colors"
-            >
-              <ShoppingCart className="w-5 h-5" />
-              <span className="font-medium">Cart</span>
-            </Link>
-
-            {/* Favorites */}
-            <div>
-              <button
-                onClick={() => toggleMenu('favorites')}
-                className="w-full flex items-center justify-between px-3 py-2 rounded-lg text-slate-700 hover:bg-slate-100 hover:text-brand-600 transition-colors"
-              >
-                <div className="flex items-center gap-3">
-                  <Heart className="w-5 h-5" />
-                  <span className="font-medium">Favorites</span>
-                </div>
-                {expandedMenus.has('favorites') ? (
-                  <ChevronDown className="w-4 h-4" />
-                ) : (
-                  <ChevronRight className="w-4 h-4" />
-                )}
-              </button>
-              {expandedMenus.has('favorites') && (
-                <div className="ml-8 mt-1 space-y-1">
-                  <a
-                    href="#"
-                    className="block px-3 py-2 rounded-lg text-sm text-slate-600 hover:bg-slate-100 hover:text-brand-600 transition-colors"
-                  >
-                    Products
-                  </a>
-                  <a
-                    href="#"
-                    className="block px-3 py-2 rounded-lg text-sm text-slate-600 hover:bg-slate-100 hover:text-brand-600 transition-colors"
-                  >
-                    Stores / Sellers
-                  </a>
-                </div>
-              )}
-            </div>
-
-            {/* Messages */}
-            <Link
-              to="/buyer/messages"
-              className="flex items-center gap-3 px-3 py-2 rounded-lg text-slate-700 hover:bg-slate-100 hover:text-brand-600 transition-colors"
-            >
-              <MessageSquare className="w-5 h-5" />
-              <span className="font-medium">Messages</span>
-            </Link>
-
-            {/* Account */}
-            <div>
-              <button
-                onClick={() => toggleMenu('account')}
-                className="w-full flex items-center justify-between px-3 py-2 rounded-lg text-slate-700 hover:bg-slate-100 hover:text-brand-600 transition-colors"
-              >
-                <div className="flex items-center gap-3">
-                  <UserIcon className="w-5 h-5" />
-                  <span className="font-medium">Account</span>
-                </div>
-                {expandedMenus.has('account') ? (
-                  <ChevronDown className="w-4 h-4" />
-                ) : (
-                  <ChevronRight className="w-4 h-4" />
-                )}
-              </button>
-              {expandedMenus.has('account') && (
-                <div className="ml-8 mt-1 space-y-1">
-                  <a
-                    href="#"
-                    className="block px-3 py-2 rounded-lg text-sm text-slate-600 hover:bg-slate-100 hover:text-brand-600 transition-colors"
-                  >
-                    Profile
-                  </a>
-                  <a
-                    href="#"
-                    className="block px-3 py-2 rounded-lg text-sm text-slate-600 hover:bg-slate-100 hover:text-brand-600 transition-colors"
-                  >
-                    Address
-                  </a>
-                  <a
-                    href="#"
-                    className="block px-3 py-2 rounded-lg text-sm text-slate-600 hover:bg-slate-100 hover:text-brand-600 transition-colors"
-                  >
-                    Company Info
-                  </a>
-                </div>
-              )}
-            </div>
-
-            {/* Support */}
-            <a
-              href="#"
-              className="flex items-center gap-3 px-3 py-2 rounded-lg text-slate-700 hover:bg-slate-100 hover:text-brand-600 transition-colors"
-            >
-              <HelpCircle className="w-5 h-5" />
-              <span className="font-medium">Support</span>
-            </a>
-          </nav>
-        </aside>
+        <BuyerSidebar />
 
         {/* Main Content */}
         <div className="flex-1 flex flex-col relative h-full overflow-hidden">

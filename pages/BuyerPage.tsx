@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import Header from '../components/Header';
+import BuyerSidebar from '../components/BuyerSidebar';
 import {
   ShoppingCart,
   Search,
@@ -13,13 +14,6 @@ import {
   AlertCircle,
   CheckCircle2,
   X,
-  Home,
-  ChevronDown,
-  ChevronRight,
-  MessageSquare,
-  User,
-  HelpCircle,
-  FileText,
   Star,
   Store,
   MapPin,
@@ -57,20 +51,7 @@ const BuyerPage: React.FC = () => {
   const [isSearchModalOpen, setIsSearchModalOpen] = useState(false);
   const [isOrdersModalOpen, setIsOrdersModalOpen] = useState(false);
   const [orderItems, setOrderItems] = useState<OrderItem[]>([]);
-  const [expandedMenus, setExpandedMenus] = useState<Set<string>>(new Set(['products', 'orders', 'favorites', 'account']));
   const searchInputRef = useRef<HTMLInputElement | null>(null);
-
-  const toggleMenu = (menuKey: string) => {
-    setExpandedMenus((prev) => {
-      const newSet = new Set(prev);
-      if (newSet.has(menuKey)) {
-        newSet.delete(menuKey);
-      } else {
-        newSet.add(menuKey);
-      }
-      return newSet;
-    });
-  };
 
   const totalOrderCount = useMemo(
     () => orderItems.reduce((sum, item) => sum + item.quantity, 0),
@@ -181,216 +162,7 @@ const BuyerPage: React.FC = () => {
       <Header />
       <main className="pt-20 flex h-screen overflow-hidden">
         {/* Sidebar */}
-        <aside className="w-64 bg-white border-r border-slate-200 h-[calc(100vh-5rem)] overflow-y-auto">
-          <nav className="p-4 space-y-1">
-            {/* Home */}
-            <a
-              href="/"
-              className="flex items-center gap-3 px-3 py-2 rounded-lg text-slate-700 hover:bg-slate-100 hover:text-brand-600 transition-colors"
-            >
-              <Home className="w-5 h-5" />
-              <span className="font-medium">Home</span>
-            </a>
-
-            {/* Products */}
-            <div>
-              <button
-                onClick={() => toggleMenu('products')}
-                className="w-full flex items-center justify-between px-3 py-2 rounded-lg text-slate-700 hover:bg-slate-100 hover:text-brand-600 transition-colors"
-              >
-                <div className="flex items-center gap-3">
-                  <Package className="w-5 h-5" />
-                  <span className="font-medium">Products</span>
-                </div>
-                {expandedMenus.has('products') ? (
-                  <ChevronDown className="w-4 h-4" />
-                ) : (
-                  <ChevronRight className="w-4 h-4" />
-                )}
-              </button>
-              {expandedMenus.has('products') && (
-                <div className="ml-8 mt-1 space-y-1">
-                  <Link
-                    to="/buyer/products"
-                    className="block px-3 py-2 rounded-lg text-sm text-slate-600 hover:bg-slate-100 hover:text-brand-600 transition-colors"
-                  >
-                    All Products
-                  </Link>
-                  <Link
-                    to="/buyer/ai-search"
-                    className="block px-3 py-2 rounded-lg text-sm text-slate-600 hover:bg-slate-100 hover:text-brand-600 transition-colors"
-                  >
-                    AI Search
-                  </Link>
-                  <Link
-                    to="/buyer/price-insights"
-                    className="block px-3 py-2 rounded-lg text-sm text-slate-600 hover:bg-slate-100 hover:text-brand-600 transition-colors"
-                  >
-                    Price Insights
-                  </Link>
-                </div>
-              )}
-            </div>
-
-            {/* Orders */}
-            <div>
-              <button
-                onClick={() => toggleMenu('orders')}
-                className="w-full flex items-center justify-between px-3 py-2 rounded-lg text-slate-700 hover:bg-slate-100 hover:text-brand-600 transition-colors"
-              >
-                <div className="flex items-center gap-3">
-                  <FileText className="w-5 h-5" />
-                  <span className="font-medium">Orders</span>
-                </div>
-                {expandedMenus.has('orders') ? (
-                  <ChevronDown className="w-4 h-4" />
-                ) : (
-                  <ChevronRight className="w-4 h-4" />
-                )}
-              </button>
-              {expandedMenus.has('orders') && (
-                <div className="ml-8 mt-1 space-y-1">
-                  <Link
-                    to="/buyer/orders"
-                    className="block px-3 py-2 rounded-lg text-sm text-slate-600 hover:bg-slate-100 hover:text-brand-600 transition-colors"
-                  >
-                    All Orders
-                  </Link>
-                  <a
-                    href="#"
-                    className="block px-3 py-2 rounded-lg text-sm text-slate-600 hover:bg-slate-100 hover:text-brand-600 transition-colors"
-                  >
-                    Pending Payment
-                  </a>
-                  <a
-                    href="#"
-                    className="block px-3 py-2 rounded-lg text-sm text-slate-600 hover:bg-slate-100 hover:text-brand-600 transition-colors"
-                  >
-                    To Be Shipped
-                  </a>
-                  <a
-                    href="#"
-                    className="block px-3 py-2 rounded-lg text-sm text-slate-600 hover:bg-slate-100 hover:text-brand-600 transition-colors"
-                  >
-                    Shipped
-                  </a>
-                  <a
-                    href="#"
-                    className="block px-3 py-2 rounded-lg text-sm text-slate-600 hover:bg-slate-100 hover:text-brand-600 transition-colors"
-                  >
-                    Completed
-                  </a>
-                </div>
-              )}
-            </div>
-
-            {/* Cart */}
-            <a
-              href="#"
-              className="flex items-center gap-3 px-3 py-2 rounded-lg text-slate-700 hover:bg-slate-100 hover:text-brand-600 transition-colors"
-            >
-              <ShoppingCart className="w-5 h-5" />
-              <span className="font-medium">Cart</span>
-              {totalOrderCount > 0 && (
-                <span className="ml-auto bg-brand-600 text-white text-xs font-semibold px-2 py-0.5 rounded-full">
-                  {totalOrderCount}
-                </span>
-              )}
-            </a>
-
-            {/* Favorites */}
-            <div>
-              <button
-                onClick={() => toggleMenu('favorites')}
-                className="w-full flex items-center justify-between px-3 py-2 rounded-lg text-slate-700 hover:bg-slate-100 hover:text-brand-600 transition-colors"
-              >
-                <div className="flex items-center gap-3">
-                  <Heart className="w-5 h-5" />
-                  <span className="font-medium">Favorites</span>
-                </div>
-                {expandedMenus.has('favorites') ? (
-                  <ChevronDown className="w-4 h-4" />
-                ) : (
-                  <ChevronRight className="w-4 h-4" />
-                )}
-              </button>
-              {expandedMenus.has('favorites') && (
-                <div className="ml-8 mt-1 space-y-1">
-                  <a
-                    href="#"
-                    className="block px-3 py-2 rounded-lg text-sm text-slate-600 hover:bg-slate-100 hover:text-brand-600 transition-colors"
-                  >
-                    Products
-                  </a>
-                  <a
-                    href="#"
-                    className="block px-3 py-2 rounded-lg text-sm text-slate-600 hover:bg-slate-100 hover:text-brand-600 transition-colors"
-                  >
-                    Stores / Sellers
-                  </a>
-                </div>
-              )}
-            </div>
-
-            {/* Messages */}
-            <a
-              href="#"
-              className="flex items-center gap-3 px-3 py-2 rounded-lg text-slate-700 hover:bg-slate-100 hover:text-brand-600 transition-colors"
-            >
-              <MessageSquare className="w-5 h-5" />
-              <span className="font-medium">Messages</span>
-            </a>
-
-            {/* Account */}
-            <div>
-              <button
-                onClick={() => toggleMenu('account')}
-                className="w-full flex items-center justify-between px-3 py-2 rounded-lg text-slate-700 hover:bg-slate-100 hover:text-brand-600 transition-colors"
-              >
-                <div className="flex items-center gap-3">
-                  <User className="w-5 h-5" />
-                  <span className="font-medium">Account</span>
-                </div>
-                {expandedMenus.has('account') ? (
-                  <ChevronDown className="w-4 h-4" />
-                ) : (
-                  <ChevronRight className="w-4 h-4" />
-                )}
-              </button>
-              {expandedMenus.has('account') && (
-                <div className="ml-8 mt-1 space-y-1">
-                  <a
-                    href="#"
-                    className="block px-3 py-2 rounded-lg text-sm text-slate-600 hover:bg-slate-100 hover:text-brand-600 transition-colors"
-                  >
-                    Profile
-                  </a>
-                  <a
-                    href="#"
-                    className="block px-3 py-2 rounded-lg text-sm text-slate-600 hover:bg-slate-100 hover:text-brand-600 transition-colors"
-                  >
-                    Address
-                  </a>
-                  <a
-                    href="#"
-                    className="block px-3 py-2 rounded-lg text-sm text-slate-600 hover:bg-slate-100 hover:text-brand-600 transition-colors"
-                  >
-                    Company Info
-                  </a>
-                </div>
-              )}
-            </div>
-
-            {/* Support */}
-            <a
-              href="#"
-              className="flex items-center gap-3 px-3 py-2 rounded-lg text-slate-700 hover:bg-slate-100 hover:text-brand-600 transition-colors"
-            >
-              <HelpCircle className="w-5 h-5" />
-              <span className="font-medium">Support</span>
-            </a>
-          </nav>
-        </aside>
+        <BuyerSidebar />
 
         {/* Main Content */}
         <div className="flex-1 bg-white h-full overflow-hidden flex flex-col">

@@ -18,6 +18,10 @@ import TrackingPage from '../pages/TrackingPage';
 import SellerPage from '../pages/SellerPage';
 import PEPage from '../pages/PEPage';
 import SalesDataManagementPage from '../pages/SalesDataManagementPage';
+import PurchaseConsolePage from '../pages/PurchaseConsolePage';
+import PurchaseRequestPage from '../pages/PurchaseRequestPage';
+import PunchoutReturnPage from '../pages/PunchoutReturnPage';
+import PunchoutShoppingPage from '../pages/PunchoutShoppingPage';
 import BuyerLayout from '../layouts/BuyerLayout';
 import AuthCallbackRoute from './AuthCallbackRoute';
 
@@ -199,6 +203,38 @@ const AppRoutes: React.FC = () => {
         }
       />
       <Route
+        path="/buyer/purchase-console"
+        element={
+          <ProtectedRoute>
+            <PurchaseConsolePage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/buyer/purchase-requests"
+        element={
+          <ProtectedRoute>
+            <PurchaseRequestPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/buyer/purchase-requests/new"
+        element={
+          <ProtectedRoute>
+            <PurchaseRequestPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/buyer/purchase-requests/:id"
+        element={
+          <ProtectedRoute>
+            <PurchaseRequestPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
         path="/seller"
         element={
           <ProtectedRoute>
@@ -211,6 +247,22 @@ const AppRoutes: React.FC = () => {
         element={
           <ProtectedRoute>
             <PEPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/punchout/shopping"
+        element={
+          <ProtectedRoute>
+            <PunchoutShoppingPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/punchout/return"
+        element={
+          <ProtectedRoute>
+            <PunchoutReturnPage />
           </ProtectedRoute>
         }
       />

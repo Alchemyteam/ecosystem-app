@@ -126,6 +126,31 @@ export interface AddToCartResponse {
   cartItem: CartItem;
 }
 
+export interface ShippingAddress {
+  street: string;
+  city: string;
+  postalCode: string;
+  country: string;
+}
+
+export interface CreateOrderRequest {
+  items: Array<{
+    productId: string;
+    quantity: number;
+  }>;
+  shippingAddress: ShippingAddress;
+  paymentMethod: string;
+}
+
+export interface CreateOrderResponse {
+  order: {
+    id: string;
+    orderNumber: string;
+    status: string;
+    total: number;
+  };
+}
+
 // Chat types
 export interface ChatMessageRequest {
   message: string;

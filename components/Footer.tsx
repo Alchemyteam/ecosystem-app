@@ -8,7 +8,7 @@ const Footer: React.FC = () => {
           <div className="col-span-1 md:col-span-2">
             <div className="flex items-center gap-2 mb-4 text-white">
               <div className="w-6 h-6 bg-brand-600 rounded flex items-center justify-center text-xs font-bold">F</div>
-              <span className="font-bold text-xl">[X]</span>
+              <span className="font-bold text-xl">Aura</span>
             </div>
             <p className="max-w-sm text-sm leading-relaxed mb-6">
               The first ecosystem platform for the formwork sector. 
@@ -38,7 +38,7 @@ const Footer: React.FC = () => {
         </div>
         
         <div className="pt-8 border-t border-slate-800 flex flex-col md:flex-row justify-between items-center gap-4 text-xs">
-          <p>© {new Date().getFullYear()} [X] Ecosystem. All rights reserved.</p>
+          <p>© {new Date().getFullYear()} Aura Ecosystem. All rights reserved.</p>
           <div className="flex gap-6">
             <a href="#" className="hover:text-white">Privacy Policy</a>
             <a href="#" className="hover:text-white">Terms of Service</a>

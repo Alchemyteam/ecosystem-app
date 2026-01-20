@@ -67,7 +67,7 @@ const Hero: React.FC = () => {
                    <div className="w-3 h-3 rounded-full bg-red-400"></div>
                    <div className="w-3 h-3 rounded-full bg-yellow-400"></div>
                    <div className="w-3 h-3 rounded-full bg-green-400"></div>
-                   <div className="ml-auto px-3 py-1 bg-slate-100 rounded-md text-xs font-medium text-slate-500">[X] Dashboard</div>
+                   <div className="ml-auto px-3 py-1 bg-slate-100 rounded-md text-xs font-medium text-slate-500">Aura Dashboard</div>
                 </div>
                 
                 {/* Mock Grid */}

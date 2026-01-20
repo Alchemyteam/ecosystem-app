@@ -1,7 +1,15 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, Link, useSearchParams } from 'react-router-dom';
 import Header from '../components/Header';
 import { buyerApi, CartItemWithProduct, ApiError, CreateOrderRequest, ShippingAddress } from '../services/api';
+import {
+  validateSession,
+  returnCartWithRetry,
+  getSessionToken,
+  getSessionTokenFromURL,
+  setSessionToken,
+  convertCartItemsToPunchout,
+} from '../services/punchoutApi';
 import {
   ShoppingCart,
   Home,
@@ -19,18 +27,23 @@ import {
   CreditCard,
   MapPin,
   ArrowLeft,
+  Building2,
 } from 'lucide-react';
 
 const CheckoutPage: React.FC = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [cartItems, setCartItems] = useState<CartItemWithProduct[]>([]);
   const [total, setTotal] = useState<number>(0);
   const [itemCount, setItemCount] = useState<number>(0);
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isReturningToERP, setIsReturningToERP] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [notification, setNotification] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
   const [expandedMenus, setExpandedMenus] = useState<Set<string>>(new Set(['products', 'orders', 'favorites', 'account']));
+  const [punchoutSessionToken, setPunchoutSessionToken] = useState<string | null>(null);
+  const [isPunchoutMode, setIsPunchoutMode] = useState(false);
 
   // Form state
   const [shippingAddress, setShippingAddress] = useState<ShippingAddress>({
@@ -42,6 +55,26 @@ const CheckoutPage: React.FC = () => {
   const [paymentMethod, setPaymentMethod] = useState<string>('credit_card');
 
   useEffect(() => {
+    // Check if in Punchout mode
+    const checkPunchoutMode = () => {
+      // Get sessionToken from URL
+      let token = getSessionTokenFromURL();
+      
+      if (token) {
+        setSessionToken(token);
+        setPunchoutSessionToken(token);
+        setIsPunchoutMode(true);
+      } else {
+        // Get from localStorage
+        token = getSessionToken();
+        if (token) {
+          setPunchoutSessionToken(token);
+          setIsPunchoutMode(true);
+        }
+      }
+    };
+
+    checkPunchoutMode();
     fetchCart();
   }, []);
 
@@ -136,6 +169,121 @@ const CheckoutPage: React.FC = () => {
       setNotification({ type: 'error', message: errorMessage });
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  // Return cart to ERP system (Punchout)
+  const handleReturnToERP = async () => {
+    // Re-fetch sessionToken (may be from URL or localStorage)
+    let token = punchoutSessionToken;
+    if (!token) {
+      token = getSessionTokenFromURL() || getSessionToken();
+      if (token) {
+        setPunchoutSessionToken(token);
+      }
+    }
+
+    if (!token) {
+      console.error('No session token found');
+      setNotification({ type: 'error', message: 'Session token not found. Please ensure you entered through the Punchout flow.' });
+      setTimeout(() => setNotification(null), 5000);
+      return;
+    }
+
+    if (cartItems.length === 0) {
+      setNotification({ type: 'error', message: 'Cart is empty. Please add at least one item.' });
+      setTimeout(() => setNotification(null), 3000);
+      return;
+    }
+
+    try {
+      setIsReturningToERP(true);
+      setError(null);
+
+      console.log('Returning to ERP with token:', token ? `${token.substring(0, 10)}...` : 'null');
+      console.log('Cart items count:', cartItems.length);
+      console.log('Current URL:', window.location.href);
+      console.log('Session token from localStorage:', getSessionToken());
+
+      // Optional: Validate session (if validation fails, we still try to return, let backend decide)
+      // Commented out validation step, directly try to return cart, let backend validate session
+      // const validationResult = await validateSession(token);
+      // console.log('Session validation result:', validationResult);
+      // if (!validationResult.valid) {
+      //   console.warn('Session validation failed, but will still attempt to return cart:', validationResult.error);
+      // }
+
+      // Convert cart data to Punchout format
+      const punchoutItems = convertCartItemsToPunchout(cartItems);
+
+      // Debug: Print converted data
+      console.log('=== Punchout Return Debug ===');
+      console.log('Session Token:', token);
+      console.log('Items Count:', punchoutItems.length);
+      console.log('Punchout Items:', JSON.stringify(punchoutItems, null, 2));
+      console.log('Original Cart Items:', JSON.stringify(cartItems, null, 2));
+      console.log('============================');
+
+      // Validate converted data
+      if (punchoutItems.length === 0) {
+        setNotification({ type: 'error', message: 'Failed to convert cart data' });
+        setTimeout(() => setNotification(null), 5000);
+        setIsReturningToERP(false);
+        return;
+      }
+
+      // Check for invalid items
+      const invalidItems = punchoutItems.filter(item => !item.productId || !item.quantity || item.quantity < 1);
+      if (invalidItems.length > 0) {
+        console.error('Invalid punchout items:', invalidItems);
+        setNotification({ type: 'error', message: 'Cart contains invalid items. Please check and try again.' });
+        setTimeout(() => setNotification(null), 5000);
+        setIsReturningToERP(false);
+        return;
+      }
+
+      // Return cart to ERP (using latest token)
+      const response = await returnCartWithRetry(
+        token,
+        punchoutItems
+      );
+
+      if (response.success) {
+        setNotification({ 
+          type: 'success', 
+          message: 'Cart successfully returned to ERP system. Window will close in 3 seconds...' 
+        });
+        
+        // Close window or redirect after 3 seconds
+        setTimeout(() => {
+          // Try to close window (if opened via window.open)
+          if (window.opener) {
+            window.close();
+          } else {
+            // Otherwise redirect to home
+            navigate('/');
+          }
+        }, 3000);
+      } else {
+        // Business failure
+        let errorMessage = response.message || 'Failed to return to ERP system';
+        
+        if (response.remainingAttempts && response.remainingAttempts > 0) {
+          errorMessage = `${errorMessage} (Remaining attempts: ${response.remainingAttempts})`;
+        } else {
+          errorMessage = `${errorMessage}. Please restart the purchase flow.`;
+        }
+        
+        setNotification({ type: 'error', message: errorMessage });
+        setTimeout(() => setNotification(null), 5000);
+      }
+    } catch (err) {
+      console.error('Return to ERP failed:', err);
+      const errorMessage = err instanceof Error ? err.message : 'Network error, please try again later';
+      setNotification({ type: 'error', message: errorMessage });
+      setTimeout(() => setNotification(null), 5000);
+    } finally {
+      setIsReturningToERP(false);
     }
   };
 
@@ -537,23 +685,51 @@ const CheckoutPage: React.FC = () => {
                       </div>
                     </div>
 
-                    <button
-                      onClick={handleSubmitOrder}
-                      disabled={isSubmitting || cartItems.length === 0}
-                      className="w-full mt-6 px-6 py-3 bg-brand-600 text-white rounded-lg font-medium hover:bg-brand-700 transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      {isSubmitting ? (
-                        <>
-                          <Loader2 className="animate-spin" size={18} />
-                          Processing...
-                        </>
-                      ) : (
-                        <>
-                          <CheckCircle2 size={18} />
-                          Place Order
-                        </>
-                      )}
-                    </button>
+                    {/* Punchout mode: Show return to ERP button */}
+                    {isPunchoutMode ? (
+                      <>
+                        <button
+                          onClick={handleReturnToERP}
+                          disabled={isReturningToERP || cartItems.length === 0}
+                          className="w-full mt-6 px-6 py-3 bg-brand-600 text-white rounded-lg font-medium hover:bg-brand-700 transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          {isReturningToERP ? (
+                            <>
+                              <Loader2 className="animate-spin" size={18} />
+                              Returning to ERP...
+                            </>
+                          ) : (
+                            <>
+                              <Building2 size={18} />
+                              Return to ERP System
+                            </>
+                          )}
+                        </button>
+                        <p className="mt-2 text-xs text-center text-slate-500">
+                          Return cart data to your ERP system
+                        </p>
+                      </>
+                    ) : (
+                      <>
+                        <button
+                          onClick={handleSubmitOrder}
+                          disabled={isSubmitting || cartItems.length === 0}
+                          className="w-full mt-6 px-6 py-3 bg-brand-600 text-white rounded-lg font-medium hover:bg-brand-700 transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          {isSubmitting ? (
+                            <>
+                              <Loader2 className="animate-spin" size={18} />
+                              Processing...
+                            </>
+                          ) : (
+                            <>
+                              <CheckCircle2 size={18} />
+                              Place Order
+                            </>
+                          )}
+                        </button>
+                      </>
+                    )}
 
                     <Link
                       to="/buyer/cart"

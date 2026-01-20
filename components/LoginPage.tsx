@@ -80,7 +80,7 @@ const LoginPage: React.FC = () => {
           <div className="inline-flex items-center justify-center w-16 h-16 bg-brand-600 rounded-2xl mb-4 shadow-lg">
             <span className="text-white font-bold text-xl">F</span>
           </div>
-          <h1 className="text-2xl font-bold text-slate-900 mb-2">[X]</h1>
+          <h1 className="text-2xl font-bold text-slate-900 mb-2">Aura</h1>
           <p className="text-slate-600">
             {isLoginMode ? 'Welcome back!' : 'Create your account'}
           </p>
